@@ -1,0 +1,329 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f2f7;
+  color: #1a1a2e;
+}
+
+/* ─── Login ─────────────────────────────────────────── */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #2d2d50 100%);
+}
+
+.login-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.login-logo-icon {
+  font-size: 1.6rem;
+  color: #4f6ef7;
+}
+
+.login-logo-text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a1a2e;
+}
+
+.login-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.login-error {
+  background: #fff0f0;
+  border: 1px solid #ffcccc;
+  color: #c0392b;
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+  margin-bottom: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.field input {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.15s;
+  min-width: unset;
+  flex: unset;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #4f6ef7;
+  box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.12);
+}
+
+.login-btn {
+  padding: 0.65rem;
+  background: #4f6ef7;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 0.25rem;
+}
+
+.login-btn:hover:not(:disabled) {
+  background: #3a57d4;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-hint {
+  font-size: 0.78rem;
+  color: #888;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.login-hint code {
+  background: #f0f2f7;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+/* ─── Shell / Header ─────────────────────────────────── */
+
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-header {
+  background: #1a1a2e;
+  height: 56px;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.shell-brand {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.shell-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shell-user-name {
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.shell-user-role {
+  color: #aab4c8;
+  font-size: 0.78rem;
+  background: #2d2d50;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.shell-logout {
+  background: none;
+  border: 1px solid #444;
+  color: #aab4c8;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.shell-logout:hover {
+  border-color: #aab4c8;
+  color: #fff;
+}
+
+/* ─── Dashboard ──────────────────────────────────────── */
+
+.dashboard {
+  padding: 2.5rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.dashboard-hero {
+  margin-bottom: 2rem;
+}
+
+.dashboard-hero h1 {
+  font-size: 1.6rem;
+  color: #1a1a2e;
+  margin-bottom: 0.35rem;
+}
+
+.dashboard-hero p {
+  color: #666;
+  font-size: 0.92rem;
+}
+
+/* ─── Service Cards Grid ─────────────────────────────── */
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.service-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border: 1px solid #eef0f4;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.service-card.active:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.service-card.coming-soon {
+  opacity: 0.65;
+}
+
+.service-card-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.service-card-body {
+  flex: 1;
+}
+
+.service-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.service-card-header h3 {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.service-card-body p {
+  font-size: 0.84rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.service-card-footer {
+  margin-top: 1.25rem;
+}
+
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.status-badge.active {
+  background: #d4f7e0;
+  color: #1e7a40;
+}
+
+.status-badge.coming-soon {
+  background: #f0f2f7;
+  color: #888;
+}
+
+.launch-btn {
+  display: inline-block;
+  padding: 0.5rem 1.2rem;
+  background: #4f6ef7;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.launch-btn:hover {
+  background: #3a57d4;
+}
+
+.launch-btn.disabled {
+  background: #e8eaf0;
+  color: #aaa;
+  cursor: not-allowed;
+}

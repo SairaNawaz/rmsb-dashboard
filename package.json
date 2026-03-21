@@ -1,0 +1,14 @@
+{
+  "name": "rmsb-dashboard",
+  "version": "1.0.0",
+  "description": "RMSB Dashboard — login shell + API gateway",
+  "scripts": {
+    "setup": "npm install --prefix api-gateway && npm install --prefix frontend",
+    "dev": "concurrently \"npm run dev --prefix api-gateway\" \"npm run dev --prefix frontend\"",
+    "dev:gateway": "npm run dev --prefix api-gateway",
+    "dev:ui": "npm run dev --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
