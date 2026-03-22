@@ -5,6 +5,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 COPY . .
+ARG VITE_ADMIN_EMAILS
+ENV VITE_ADMIN_EMAILS=$VITE_ADMIN_EMAILS
 RUN npm run build
 
 # ── Stage 2: Serve static files ───────────────────────────

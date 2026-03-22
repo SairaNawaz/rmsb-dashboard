@@ -39,6 +39,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'push' }}
           tags: ghcr.io/${{ env.OWNER }}/rmsb-frontend:latest
+          build-args: |
+            VITE_ADMIN_EMAILS=${{ secrets.VITE_ADMIN_EMAILS }}
 
   build-gateway:
     name: Build API Gateway Image
