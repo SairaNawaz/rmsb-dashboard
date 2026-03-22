@@ -131,6 +131,33 @@ body {
   margin-top: 0.5rem;
 }
 
+.microsoft-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: #0078d4;
+}
+
+.microsoft-btn:hover:not(:disabled) {
+  background: #006abc;
+}
+
+.ms-icon {
+  font-size: 1rem;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #4f6ef7;
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
 .login-hint code {
   background: #f0f2f7;
   padding: 1px 5px;
