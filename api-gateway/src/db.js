@@ -8,4 +8,9 @@ const pool = new Pool({
   database: process.env.DB_NAME     || 'rmsb_db',
 });
 
+// Prevent pool errors (e.g. postgres restart) from crashing the process
+pool.on('error', (err) => {
+  console.error('DB pool error:', err.message);
+});
+
 module.exports = pool;
