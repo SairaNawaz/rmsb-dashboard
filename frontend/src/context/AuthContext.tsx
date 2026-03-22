@@ -57,10 +57,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loginWithMicrosoft(): Promise<void> {
     const result = await instance.loginPopup(loginRequest);
     const account = result.account;
+    const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((e: string) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const email = account.username.toLowerCase();
+    const role = adminEmails.includes(email) ? 'Administrator' : 'Viewer';
     saveUser({
       username: account.username,
       displayName: account.name ?? account.username,
-      role: 'Viewer', // default role — extend with Azure AD app roles later
+      role,
       email: account.username,
     });
   }
