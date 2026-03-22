@@ -1,6 +1,6 @@
 # rmsb-dashboard
 
-Platform repo for the RMSB platform. Contains the login shell, API gateway, and full platform orchestration.
+Platform hub for the RMSB platform. Provides the login shell, API gateway, service registry, and Docker orchestration.
 
 ---
 
@@ -9,27 +9,17 @@ Platform repo for the RMSB platform. Contains the login shell, API gateway, and 
 ```
 rmsb-dashboard/
 ├── frontend/              ← Login + Dashboard shell (Vite + React + TypeScript)
-├── api-gateway/           ← Express proxy routing requests to services
+├── api-gateway/           ← Express proxy + service registry API
 ├── docker-compose.yml     ← Run full platform using pre-built images
 ├── docker-compose.dev.yml ← Override to build from local source
-└── .env.example           ← Copy this to .env before first run
+└── .env.example           ← Copy to .env before first run
 ```
-
----
-
-## All repositories
-
-| Repo | Purpose | Ports |
-|------|---------|-------|
-| `rmsb-dashboard` ← **this repo** | Login shell + API gateway + orchestration | 5173 (UI) · 8080 (gateway) |
-| `rmsb-s1-device-management` | Device management service | 3001 |
-| `rmsb-s2-capacity-planning` | Capacity planning service | 3002 |
 
 ---
 
 ## Run the full platform
 
-Requires Docker Desktop running.
+Requires Docker Desktop.
 
 ```bash
 git clone https://github.com/SairaNawaz/rmsb-dashboard.git
@@ -39,8 +29,8 @@ docker compose up
 ```
 
 Open http://localhost:5173 and log in with:
-- `admin` / `password`
-- `demo` / `demo`
+- `admin` / `demo` — full access including Settings
+- `user` / `demo` — dashboard view only
 
 To stop:
 ```bash
@@ -54,64 +44,43 @@ docker compose down -v
 
 ---
 
-## Develop dashboard or gateway locally
+## Develop locally
 
 ```bash
 git clone https://github.com/SairaNawaz/rmsb-dashboard.git
 cd rmsb-dashboard
 cp .env.example .env
+docker compose up postgres   # start DB only
 npm install
-npm run dev    # starts frontend (5173) + gateway (8080) together
+npm run dev                  # frontend (5173) + gateway (8080)
 ```
-
-For services to be available, run their containers separately or use the dev override below.
 
 ---
 
-## Run full platform from local source
+## Service Registry
 
-Clone this repo and any service repos as siblings inside the same folder:
+Services are registered via the dashboard — no manual code changes needed.
 
-```
-AutomationInitiatives/
-├── rmsb-dashboard/              ← this repo
-├── rmsb-s1-device-management/
-└── rmsb-s2-capacity-planning/
-```
-
-Then run:
-```bash
-cd rmsb-dashboard
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
-```
+**To add a new service:**
+1. Log in as `admin` → go to **Settings**
+2. Click **Register Service** and fill in the details
+3. Click **Sync Compose** — `docker-compose.yml` is updated automatically
+4. Run `docker compose up` to start the new service
+5. Click **Activate** in Settings to make it live on the dashboard
 
 ---
 
 ## Database
 
-Single PostgreSQL instance shared across all services. Each service owns and manages its own schema — schemas are created automatically when the service starts.
+Single PostgreSQL instance shared across all services. Each service owns its own schema and is responsible for creating it on startup.
 
-| Schema | Owner |
-|--------|-------|
-| `schema_s1` | rmsb-s1-device-management |
-| `schema_s2` | rmsb-s2-capacity-planning |
-
-Host port: `5433` (avoids conflicts with other local Postgres instances).
-
----
-
-## Adding a new service (e.g. S3)
-
-1. Create repo `rmsb-s3-your-service` — include its own `docker-compose.yml` and `src/db/migrate.js`
-2. Add `s3` service to `docker-compose.yml` and `docker-compose.dev.yml` in this repo
-3. Add a route in `api-gateway/src/index.js`
-4. Add the service card to `frontend/src/pages/Dashboard.tsx`
+Host port: `5433` (avoids conflicts with local Postgres instances).
 
 ---
 
 ## CI
 
-On every push to `main`, GitHub Actions builds and pushes two images to ghcr.io:
+On every push to `main`, GitHub Actions builds and pushes two images:
 
 | Image | Built from |
 |-------|-----------|
@@ -122,4 +91,4 @@ On every push to `main`, GitHub Actions builds and pushes two images to ghcr.io:
 
 ## Environment variables
 
-See [`.env.example`](.env.example) for all variables with descriptions.
+See [`.env.example`](.env.example) for all variables.
