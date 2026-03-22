@@ -1,101 +1,58 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 interface Service {
-  id: string;
+  id: number;
   name: string;
+  display_name: string;
   description: string;
-  url: string | null;
-  status: 'active' | 'coming-soon';
   icon: string;
+  port: number;
+  status: 'pending' | 'active' | 'disabled';
 }
 
-const SERVICES: Service[] = [
-  {
-    id: 's1',
-    name: 'Device Management',
-    description: 'Register, assign, and track all devices across the organisation.',
-    url: 'http://localhost:3001',
-    status: 'active',
-    icon: '💻',
-  },
-  {
-    id: 's2',
-    name: 'Capacity Planning',
-    description: 'Submit leave requests and view team capacity at a glance.',
-    url: 'http://localhost:3002',
-    status: 'active',
-    icon: '📅',
-  },
-  {
-    id: 's3',
-    name: 'Asset Tracking',
-    description: 'Track physical assets across locations and departments.',
-    url: null,
-    status: 'coming-soon',
-    icon: '📦',
-  },
-  {
-    id: 's4',
-    name: 'Incident Management',
-    description: 'Log, triage, and resolve incidents across teams.',
-    url: null,
-    status: 'coming-soon',
-    icon: '🚨',
-  },
-  {
-    id: 's5',
-    name: 'Procurement',
-    description: 'Manage purchase requests and vendor approvals.',
-    url: null,
-    status: 'coming-soon',
-    icon: '🛒',
-  },
-  {
-    id: 's6',
-    name: 'Reporting',
-    description: 'Cross-service analytics and exportable reports.',
-    url: null,
-    status: 'coming-soon',
-    icon: '📊',
-  },
-];
+const API = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  function handleLogout() {
-    logout();
-    navigate('/login');
-  }
+  useEffect(() => {
+    fetch(`${API}/registry`)
+      .then((r) => r.json())
+      .then((data) => setServices(Array.isArray(data) ? data : []))
+      .catch(() => setServices([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    <div className="shell">
-      <header className="shell-header">
-        <span className="shell-brand">⬡ RMSB Platform</span>
-        <div className="shell-user">
-          <span className="shell-user-name">{user!.displayName}</span>
-          <span className="shell-user-role">{user!.role}</span>
-          <button className="shell-logout" onClick={handleLogout}>Sign out</button>
-        </div>
-      </header>
+    <div className="dashboard">
+      <div className="dashboard-hero">
+        <h1>Welcome back, {user!.displayName.split(' ')[0]}</h1>
+        <p>Select a service to launch it in a new window.</p>
+      </div>
 
-      <div className="dashboard">
-        <div className="dashboard-hero">
-          <h1>Welcome back, {user!.displayName.split(' ')[0]}</h1>
-          <p>Select a service to launch it in a new window.</p>
-        </div>
-
+      {loading ? (
+        <p className="dashboard-status">Loading services...</p>
+      ) : services.length === 0 ? (
+        <p className="dashboard-status">
+          No services registered yet. An admin can register services under Settings.
+        </p>
+      ) : (
         <div className="service-grid">
-          {SERVICES.map((svc) => (
+          {services.map((svc) => (
             <div key={svc.id} className={`service-card ${svc.status}`}>
-              <div className="service-card-icon">{svc.icon}</div>
+              <div className="service-card-icon">{svc.icon || '🔧'}</div>
               <div className="service-card-body">
                 <div className="service-card-header">
-                  <h3>{svc.name}</h3>
+                  <h3>{svc.display_name}</h3>
                   <span className={`status-badge ${svc.status}`}>
-                    {svc.status === 'active' ? 'Active' : 'Coming Soon'}
+                    {svc.status === 'active'
+                      ? 'Active'
+                      : svc.status === 'pending'
+                      ? 'Pending'
+                      : 'Disabled'}
                   </span>
                 </div>
                 <p>{svc.description}</p>
@@ -103,7 +60,7 @@ export default function Dashboard() {
               <div className="service-card-footer">
                 {svc.status === 'active' ? (
                   <a
-                    href={svc.url!}
+                    href={`http://localhost:${svc.port}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="launch-btn"
@@ -112,14 +69,14 @@ export default function Dashboard() {
                   </a>
                 ) : (
                   <button className="launch-btn disabled" disabled>
-                    Coming Soon
+                    {svc.status === 'pending' ? 'Pending Deploy' : 'Disabled'}
                   </button>
                 )}
               </div>
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
