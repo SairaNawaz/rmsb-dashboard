@@ -17,7 +17,10 @@ interface Service {
   image_tag: string;
 }
 
-const API = import.meta.env.VITE_API_GATEWAY_URL || `http://${window.location.hostname}:8080`;
+const API = import.meta.env.VITE_API_GATEWAY_URL ||
+  (window.location.protocol === 'https:'
+    ? window.location.origin
+    : `http://${window.location.hostname}:8080`);
 
 const EMPTY_FORM = {
   name: '',
