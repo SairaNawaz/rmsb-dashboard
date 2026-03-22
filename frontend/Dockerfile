@@ -10,11 +10,10 @@ RUN npm run build
 # ── Stage 2: Serve static files ───────────────────────────
 FROM node:20-alpine
 
-WORKDIR /app
 RUN npm install -g serve
 
-COPY --from=build /app/dist ./dist
+COPY --from=build /app/dist /app/dist
 
 EXPOSE 5173
 
-CMD ["serve", "-s", "dist", "-l", "5173"]
+CMD ["serve", "-s", "/app/dist", "--listen", "tcp://0.0.0.0:5173"]
