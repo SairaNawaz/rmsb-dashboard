@@ -8,6 +8,7 @@ interface Service {
   description: string;
   icon: string;
   port: number;
+  path_prefix: string;
   status: 'pending' | 'active' | 'disabled';
 }
 
