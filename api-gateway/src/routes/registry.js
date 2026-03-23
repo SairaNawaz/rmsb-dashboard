@@ -3,6 +3,31 @@ const router = express.Router();
 const pool = require('../db');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+
+function triggerDeploy() {
+  const token = process.env.GITHUB_DEPLOY_TOKEN;
+  const repo = process.env.GITHUB_REPO || 'SairaNawaz/rmsb-dashboard';
+  if (!token) return;
+
+  const body = JSON.stringify({ event_type: 'service-deploy' });
+  const [owner, repoName] = repo.split('/');
+  const req = https.request({
+    hostname: 'api.github.com',
+    path: `/repos/${owner}/${repoName}/dispatches`,
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      'User-Agent': 'rmsb-api-gateway',
+      'Content-Length': Buffer.byteLength(body),
+    },
+  });
+  req.on('error', (err) => console.error('Deploy trigger failed:', err.message));
+  req.write(body);
+  req.end();
+}
 
 // Project root is two levels up from api-gateway/src/
 const COMPOSE_PATH = path.resolve(__dirname, '../../../docker-compose.yml');
@@ -53,6 +78,7 @@ router.post('/compose-sync', async (req, res) => {
     const yaml = generateComposeYaml(rows);
     fs.writeFileSync(COMPOSE_PATH, yaml, 'utf8');
     console.log(`docker-compose.yml written to ${COMPOSE_PATH}`);
+    triggerDeploy();
     res.json({ ok: true, path: COMPOSE_PATH, services: rows.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -157,6 +183,8 @@ ${serviceBlocks}
       DB_USER: \${POSTGRES_USER}
       DB_PASSWORD: \${POSTGRES_PASSWORD}
       DB_NAME: \${POSTGRES_DB}
+      GITHUB_DEPLOY_TOKEN: \${GITHUB_DEPLOY_TOKEN}
+      GITHUB_REPO: \${GITHUB_REPO:-SairaNawaz/rmsb-dashboard}
 ${gatewayEnvRoutes}
     depends_on:
       postgres:
