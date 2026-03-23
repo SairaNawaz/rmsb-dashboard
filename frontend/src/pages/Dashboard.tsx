@@ -12,10 +12,10 @@ interface Service {
   status: 'pending' | 'active' | 'disabled';
 }
 
-const API = import.meta.env.VITE_API_GATEWAY_URL ||
+const API = (import.meta.env.VITE_API_GATEWAY_URL ||
   (window.location.protocol === 'https:'
     ? window.location.origin
-    : `http://${window.location.hostname}:8080`);
+    : `http://${window.location.hostname}:8080`)) + '/api';
 
 export default function Dashboard() {
   const { user } = useAuth();

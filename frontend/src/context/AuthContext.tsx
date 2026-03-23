@@ -1,9 +1,9 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-const API = import.meta.env.VITE_API_GATEWAY_URL ||
+const API = (import.meta.env.VITE_API_GATEWAY_URL ||
   (window.location.protocol === 'https:'
     ? window.location.origin
-    : `http://${window.location.hostname}:8080`);
+    : `http://${window.location.hostname}:8080`)) + '/api';
 import { useMsal } from '@azure/msal-react';
 import { loginRequest } from '../auth/msalConfig';
 

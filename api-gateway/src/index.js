@@ -18,11 +18,9 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', gateway: 'rmsb-api-gateway' });
 });
 
-// Registry API
-app.use('/registry', registryRouter);
-
-// Users API
-app.use('/users', usersRouter);
+// API routes
+app.use('/api/registry', registryRouter);
+app.use('/api/users', usersRouter);
 
 // ─── Dynamic proxy routing ────────────────────────────────────────────────────
 
@@ -61,10 +59,13 @@ app.use((req, res, next) => {
   getProxy(service)(req, res, next);
 });
 
-// 404 fallback
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
-});
+// Fallback → dashboard frontend (in Docker, gateway is the single entry point)
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://frontend:5173';
+app.use(createProxyMiddleware({
+  target: FRONTEND_URL,
+  changeOrigin: true,
+  on: { error: (err, req, res) => res.status(502).json({ error: 'Frontend unavailable' }) },
+}));
 
 // ─── Startup ──────────────────────────────────────────────────────────────────
 

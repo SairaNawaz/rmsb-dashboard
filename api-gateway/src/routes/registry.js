@@ -185,6 +185,7 @@ ${serviceBlocks}
       DB_NAME: \${POSTGRES_DB}
       GITHUB_DEPLOY_TOKEN: \${GITHUB_DEPLOY_TOKEN}
       GITHUB_REPO: \${GITHUB_REPO:-SairaNawaz/rmsb-dashboard}
+      FRONTEND_URL: http://frontend:5173
 ${gatewayEnvRoutes}
     depends_on:
       postgres:
