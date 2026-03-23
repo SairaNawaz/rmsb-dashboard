@@ -48,6 +48,12 @@ function getProxy(service) {
       target: `http://${service.container_name}:3000`,
       changeOrigin: true,
       pathRewrite: { [`^${service.path_prefix}`]: '' },
+      on: {
+        error: (err, req, res) => {
+          console.error(`Proxy error [${service.name}]:`, err.message);
+          res.status(502).json({ error: `Service "${service.display_name}" is unavailable` });
+        },
+      },
     });
   }
   return proxyCache[key];
