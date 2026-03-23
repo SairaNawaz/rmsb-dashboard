@@ -12,9 +12,9 @@ export const msalConfig: Configuration = {
 };
 
 export const loginRequest: PopupRequest = {
-  scopes: ['User.Read', 'User.Read.All'],
+  scopes: ['User.Read', 'User.ReadBasic.All'],
 };
 
 export const graphRequest: PopupRequest = {
-  scopes: ['User.Read.All'],
+  scopes: ['User.ReadBasic.All'],
 };
