@@ -49,6 +49,16 @@ function getProxy(service) {
       target: `http://${service.container_name}:${service.port}`,
       changeOrigin: true,
       pathRewrite: { [`^${service.path_prefix}`]: '' },
+      on: {
+        proxyReq: (proxyReq, req) => {
+          if (req.body && Object.keys(req.body).length > 0) {
+            const bodyData = JSON.stringify(req.body);
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+            proxyReq.write(bodyData);
+          }
+        },
+      },
     });
   }
   return proxyCache[key];
