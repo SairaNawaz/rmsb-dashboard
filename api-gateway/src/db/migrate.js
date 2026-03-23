@@ -21,7 +21,19 @@ async function migrate() {
       updated_at     TIMESTAMP    DEFAULT NOW()
     )
   `);
-  console.log('Migration complete: services table ready');
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS platform_users (
+      id           SERIAL PRIMARY KEY,
+      email        VARCHAR(255) UNIQUE NOT NULL,
+      display_name VARCHAR(100),
+      role         VARCHAR(20)  DEFAULT 'Viewer',
+      added_by     VARCHAR(255),
+      created_at   TIMESTAMP    DEFAULT NOW()
+    )
+  `);
+
+  console.log('Migration complete: services + platform_users tables ready');
 }
 
 module.exports = migrate;

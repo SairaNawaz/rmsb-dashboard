@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const isAdmin = user?.role === 'Administrator';
+  const isAdmin = user?.role === 'SuperAdmin' || user?.role === 'Admin' || user?.role === 'Administrator';
 
   function handleLogout() {
     logout();
@@ -39,6 +39,16 @@ export default function Layout() {
               <span className="sidebar-icon">⚙</span> Settings
             </NavLink>
           )}
+
+          {isAdmin && (
+            <NavLink
+              to="/users"
+              className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+            >
+              <span className="sidebar-icon">👤</span> Users
+            </NavLink>
+          )}
+
         </nav>
 
         <main className="shell-main">

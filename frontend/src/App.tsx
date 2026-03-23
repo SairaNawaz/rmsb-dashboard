@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
+import Users from './pages/Users';
 import Layout from './components/Layout';
 import { ReactNode } from 'react';
 
@@ -13,7 +14,8 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
 function AdminRoute({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  return user?.role === 'Administrator' ? <>{children}</> : <Navigate to="/dashboard" replace />;
+  const allowed = user?.role === 'SuperAdmin' || user?.role === 'Admin' || user?.role === 'Administrator';
+  return allowed ? <>{children}</> : <Navigate to="/dashboard" replace />;
 }
 
 function RootRedirect() {
@@ -42,6 +44,14 @@ export default function App() {
             element={
               <AdminRoute>
                 <Settings />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <AdminRoute>
+                <Users />
               </AdminRoute>
             }
           />

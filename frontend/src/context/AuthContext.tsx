@@ -1,4 +1,9 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+
+const API = import.meta.env.VITE_API_GATEWAY_URL ||
+  (window.location.protocol === 'https:'
+    ? window.location.origin
+    : `http://${window.location.hostname}:8080`);
 import { useMsal } from '@azure/msal-react';
 import { loginRequest } from '../auth/msalConfig';
 
@@ -25,7 +30,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // Mock credentials — fallback for local dev / admin access
 const MOCK_USERS: MockUser[] = [
-  { username: 'admin', password: 'demo', displayName: 'Admin User', role: 'Administrator' },
+  { username: 'admin', password: 'demo', displayName: 'Admin User', role: 'Admin' },
   { username: 'user',  password: 'demo', displayName: 'Jane Smith',  role: 'Viewer' },
 ];
 
@@ -57,12 +62,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loginWithMicrosoft(): Promise<void> {
     const result = await instance.loginPopup(loginRequest);
     const account = result.account;
-    const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? '')
-      .split(',')
-      .map((e: string) => e.trim().toLowerCase())
-      .filter(Boolean);
-    const email = account.username.toLowerCase();
-    const role = adminEmails.includes(email) ? 'Administrator' : 'Viewer';
+
+    // Resolve role from gateway (checks ADMIN_EMAILS env, then DB, defaults to Viewer)
+    let role = 'Viewer';
+    try {
+      const res = await fetch(`${API}/users/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: account.username,
+          display_name: account.name ?? account.username,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        role = data.role ?? 'Viewer';
+      }
+    } catch {
+      // gateway unreachable — fall back to Viewer
+    }
+
     saveUser({
       username: account.username,
       displayName: account.name ?? account.username,
