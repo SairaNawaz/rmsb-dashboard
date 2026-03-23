@@ -6,12 +6,14 @@ on:
     types:
       - completed
     branches: [main]
+  repository_dispatch:
+    types: [service-deploy]
 
 jobs:
   deploy:
     name: Deploy to VM
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'repository_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Deploy via SSH
