@@ -183,6 +183,7 @@ ${serviceBlocks}
       DB_USER: \${POSTGRES_USER}
       DB_PASSWORD: \${POSTGRES_PASSWORD}
       DB_NAME: \${POSTGRES_DB}
+      ADMIN_EMAILS: \${ADMIN_EMAILS}
       GITHUB_DEPLOY_TOKEN: \${GITHUB_DEPLOY_TOKEN}
       GITHUB_REPO: \${GITHUB_REPO:-SairaNawaz/rmsb-dashboard}
       FRONTEND_URL: http://frontend:5173
