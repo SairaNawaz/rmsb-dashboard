@@ -6,6 +6,7 @@ const pool = require('./db');
 const migrate = require('./db/migrate');
 const registryRouter = require('./routes/registry');
 const usersRouter = require('./routes/users');
+const graphRouter = require('./routes/graph');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -21,6 +22,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/registry', registryRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/graph', graphRouter);
 
 // ─── Dynamic proxy routing ────────────────────────────────────────────────────
 

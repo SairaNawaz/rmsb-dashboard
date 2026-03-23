@@ -5,7 +5,7 @@ const API = (import.meta.env.VITE_API_GATEWAY_URL ||
     ? window.location.origin
     : `http://${window.location.hostname}:8080`)) + '/api';
 import { useMsal } from '@azure/msal-react';
-import { loginRequest } from '../auth/msalConfig';
+import { loginRequest, graphRequest } from '../auth/msalConfig';
 
 interface User {
   username: string;
@@ -20,6 +20,7 @@ interface AuthContextType {
   login: (username: string, password: string) => { ok: boolean; error?: string };
   loginWithMicrosoft: () => Promise<void>;
   logout: () => void;
+  refreshGraphToken: () => Promise<string | null>;
 }
 
 interface MockUser extends User {
@@ -47,6 +48,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('rmsb_user', JSON.stringify(u));
   }
 
+  async function refreshGraphToken(): Promise<string | null> {
+    const accounts = instance.getAllAccounts();
+    if (!accounts.length) return null;
+    try {
+      const result = await instance.acquireTokenSilent({ ...graphRequest, account: accounts[0] });
+      localStorage.setItem('rmsb_graph_token', result.accessToken);
+      return result.accessToken;
+    } catch {
+      return null;
+    }
+  }
+
   // Mock login (admin backdoor)
   function login(username: string, password: string): { ok: boolean; error?: string } {
     const match = MOCK_USERS.find(
@@ -62,6 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function loginWithMicrosoft(): Promise<void> {
     const result = await instance.loginPopup(loginRequest);
     const account = result.account;
+
+    // Acquire and store Graph token for org user listing
+    try {
+      const graphResult = await instance.acquireTokenSilent({ ...graphRequest, account: result.account });
+      localStorage.setItem('rmsb_graph_token', graphResult.accessToken);
+    } catch {
+      // non-fatal — user listing may be unavailable
+    }
 
     // Resolve role from gateway (checks ADMIN_EMAILS env, then DB, defaults to Viewer)
     let role = 'Viewer';
@@ -93,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout(): void {
     setUser(null);
     localStorage.removeItem('rmsb_user');
+    localStorage.removeItem('rmsb_graph_token');
     // Sign out of MSAL session if active
     const accounts = instance.getAllAccounts();
     if (accounts.length > 0) {
@@ -101,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, loginWithMicrosoft, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, loginWithMicrosoft, logout, refreshGraphToken }}>
       {children}
     </AuthContext.Provider>
   );
