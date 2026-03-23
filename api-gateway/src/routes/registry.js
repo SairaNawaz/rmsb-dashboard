@@ -93,8 +93,6 @@ function generateComposeYaml(services) {
   ${svc.name}:
     image: ${svc.ghcr_image || `ghcr.io/sairanawaz/rmsb-${svc.name}-api`}:${svc.image_tag || 'latest'}
     container_name: ${svc.container_name}
-    ports:
-      - "${svc.port}:${svc.port}"
     environment:
       PORT: ${svc.port}
       DB_SCHEMA: ${svc.schema_name}

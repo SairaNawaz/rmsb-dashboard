@@ -63,7 +63,7 @@ export default function Dashboard() {
               <div className="service-card-footer">
                 {svc.status === 'active' ? (
                   <a
-                    href={`http://${window.location.hostname}:${svc.port}`}
+                    href={svc.path_prefix}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="launch-btn"

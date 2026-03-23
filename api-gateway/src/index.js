@@ -48,6 +48,7 @@ function getProxy(service) {
     proxyCache[key] = createProxyMiddleware({
       target: `http://${service.container_name}:${service.port}`,
       changeOrigin: true,
+      pathRewrite: { [`^${service.path_prefix}`]: '' },
     });
   }
   return proxyCache[key];
