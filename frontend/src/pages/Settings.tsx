@@ -7,7 +7,6 @@ interface Service {
   description: string;
   icon: string;
   path_prefix: string;
-  port: number;
   container_name: string;
   schema_name: string;
   status: string;
@@ -28,7 +27,6 @@ const EMPTY_FORM = {
   description: '',
   icon: '🔧',
   path_prefix: '',
-  port: '',
   container_name: '',
   schema_name: '',
   repo_url: '',
@@ -83,7 +81,7 @@ export default function Settings() {
       const res = await fetch(`${API}/registry`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, port: parseInt(form.port) }),
+        body: JSON.stringify(form),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -195,17 +193,6 @@ export default function Settings() {
                 />
               </div>
               <div className="field">
-                <label>Port <span className="required">*</span></label>
-                <input
-                  name="port"
-                  type="number"
-                  value={form.port}
-                  onChange={handleChange}
-                  placeholder="3003"
-                  required
-                />
-              </div>
-              <div className="field">
                 <label>Path Prefix <span className="required">*</span></label>
                 <input
                   name="path_prefix"
@@ -308,7 +295,6 @@ export default function Settings() {
               <tr>
                 <th>Service</th>
                 <th>Prefix</th>
-                <th>Port</th>
                 <th>Schema</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -323,7 +309,6 @@ export default function Settings() {
                     <span className="svc-id">{svc.name}</span>
                   </td>
                   <td><code>{svc.path_prefix}</code></td>
-                  <td>{svc.port}</td>
                   <td><code>{svc.schema_name}</code></td>
                   <td>
                     <span className={`status-badge ${svc.status}`}>{svc.status}</span>

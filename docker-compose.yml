@@ -26,10 +26,8 @@ services:
   s1:
     image: ghcr.io/sairanawaz/rmsb-s1-api:latest
     container_name: rmsb-s1
-    ports:
-      - "3001:3001"
     environment:
-      PORT: 3001
+      PORT: 3000
       DB_SCHEMA: schema_s1
       DB_HOST: postgres
       DB_PORT: 5432
@@ -66,8 +64,6 @@ services:
   frontend:
     image: ghcr.io/sairanawaz/rmsb-frontend:${TAG:-latest}
     container_name: rmsb-frontend
-    ports:
-      - "5173:5173"
     environment:
       VITE_API_GATEWAY_URL: http://localhost:8080
     depends_on:

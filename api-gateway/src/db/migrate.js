@@ -9,7 +9,6 @@ async function migrate() {
       description    TEXT,
       icon           VARCHAR(50)  DEFAULT '🔧',
       path_prefix    VARCHAR(20)  UNIQUE NOT NULL,
-      port           INT          NOT NULL,
       container_name VARCHAR(100) NOT NULL,
       schema_name    VARCHAR(100) NOT NULL,
       status         VARCHAR(20)  DEFAULT 'pending',
@@ -20,6 +19,11 @@ async function migrate() {
       registered_at  TIMESTAMP    DEFAULT NOW(),
       updated_at     TIMESTAMP    DEFAULT NOW()
     )
+  `);
+
+  // Drop legacy port column if it exists from older schema
+  await pool.query(`
+    ALTER TABLE services DROP COLUMN IF EXISTS port
   `);
 
   await pool.query(`

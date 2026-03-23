@@ -45,19 +45,19 @@ router.get('/', async (req, res) => {
 // POST /registry — register a new service
 router.post('/', async (req, res) => {
   const {
-    name, display_name, description, icon, path_prefix, port,
+    name, display_name, description, icon, path_prefix,
     container_name, schema_name, repo_url, branch, ghcr_image, image_tag,
   } = req.body;
 
   try {
     const { rows } = await pool.query(
       `INSERT INTO services
-         (name, display_name, description, icon, path_prefix, port,
+         (name, display_name, description, icon, path_prefix,
           container_name, schema_name, repo_url, branch, ghcr_image, image_tag)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        RETURNING *`,
       [
-        name, display_name, description || null, icon || '🔧', path_prefix, port,
+        name, display_name, description || null, icon || '🔧', path_prefix,
         container_name, schema_name, repo_url || null, branch || 'main',
         ghcr_image || null, image_tag || 'latest',
       ]
@@ -73,7 +73,7 @@ router.post('/', async (req, res) => {
 router.post('/compose-sync', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT * FROM services WHERE status != 'disabled' ORDER BY port ASC`
+      `SELECT * FROM services WHERE status != 'disabled' ORDER BY registered_at ASC`
     );
     const yaml = generateComposeYaml(rows);
     fs.writeFileSync(COMPOSE_PATH, yaml, 'utf8');
@@ -120,7 +120,7 @@ function generateComposeYaml(services) {
     image: ${svc.ghcr_image || `ghcr.io/sairanawaz/rmsb-${svc.name}-api`}:${svc.image_tag || 'latest'}
     container_name: ${svc.container_name}
     environment:
-      PORT: ${svc.port}
+      PORT: 3000
       DB_SCHEMA: ${svc.schema_name}
       DB_HOST: postgres
       DB_PORT: 5432
@@ -136,7 +136,7 @@ function generateComposeYaml(services) {
   const gatewayEnvRoutes = services
     .map(
       (svc) =>
-        `      ${svc.name.toUpperCase()}_SERVICE_URL: http://${svc.name}:${svc.port}`
+        `      ${svc.name.toUpperCase()}_SERVICE_URL: http://${svc.name}:3000`
     )
     .join('\n');
 
@@ -196,8 +196,6 @@ ${gatewayDeps}
   frontend:
     image: ghcr.io/sairanawaz/rmsb-frontend:\${TAG:-latest}
     container_name: rmsb-frontend
-    ports:
-      - "5173:5173"
     environment:
       VITE_API_GATEWAY_URL: http://localhost:8080
     depends_on:

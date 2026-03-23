@@ -12,17 +12,16 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors());
-app.use(express.json());
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', gateway: 'rmsb-api-gateway' });
 });
 
-// API routes
-app.use('/api/registry', registryRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/graph', graphRouter);
+// API routes — express.json() scoped here only, so proxy routes keep their body stream intact
+app.use('/api/registry', express.json(), registryRouter);
+app.use('/api/users', express.json(), usersRouter);
+app.use('/api/graph', express.json(), graphRouter);
 
 // ─── Dynamic proxy routing ────────────────────────────────────────────────────
 
@@ -43,23 +42,12 @@ async function loadServices() {
 }
 
 function getProxy(service) {
-  const key = `${service.container_name}:${service.port}`;
+  const key = service.container_name;
   if (!proxyCache[key]) {
     proxyCache[key] = createProxyMiddleware({
-      target: `http://${service.container_name}:${service.port}`,
+      target: `http://${service.container_name}:3000`,
       changeOrigin: true,
       pathRewrite: { [`^${service.path_prefix}`]: '' },
-      on: {
-        proxyReq: (proxyReq, req) => {
-          if (req.body && Object.keys(req.body).length > 0) {
-            const bodyData = JSON.stringify(req.body);
-            proxyReq.setHeader('Content-Type', 'application/json');
-            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
-            proxyReq.write(bodyData);
-            proxyReq.end()
-          }
-        },
-      },
     });
   }
   return proxyCache[key];
