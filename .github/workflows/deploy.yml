@@ -22,14 +22,14 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          envs: GITHUB_DEPLOY_TOKEN
+          envs: DEPLOY_TOKEN
           script: |
             cd rmsb-dashboard
-            git remote set-url origin https://x-access-token:$GITHUB_DEPLOY_TOKEN@github.com/Kloudius/multiservice_process_dashboard.git
+            git remote set-url origin https://x-access-token:$DEPLOY_TOKEN@github.com/Kloudius/multiservice_process_dashboard.git
             git pull
             git remote set-url origin https://github.com/Kloudius/multiservice_process_dashboard.git
             docker compose pull
             docker compose up -d
             echo "Deployed at $(date)"
         env:
-          GITHUB_DEPLOY_TOKEN: ${{ secrets.GITHUB_DEPLOY_TOKEN }}
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
