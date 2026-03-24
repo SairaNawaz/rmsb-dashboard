@@ -24,7 +24,7 @@ services:
       retries: 10
 
   s1:
-    image: ghcr.io/sairanawaz/rmsb-s1-api:latest
+    image: ghcr.io/kloudius/rmsb-s1-api:latest
     container_name: rmsb-s1
     environment:
       PORT: 3000
@@ -39,7 +39,7 @@ services:
         condition: service_healthy
 
   api-gateway:
-    image: ghcr.io/sairanawaz/rmsb-api-gateway:${TAG:-latest}
+    image: ghcr.io/kloudius/rmsb-api-gateway:${TAG:-latest}
     container_name: rmsb-api-gateway
     ports:
       - "8080:8080"
@@ -62,7 +62,7 @@ services:
         condition: service_started
 
   frontend:
-    image: ghcr.io/sairanawaz/rmsb-frontend:${TAG:-latest}
+    image: ghcr.io/kloudius/rmsb-frontend:${TAG:-latest}
     container_name: rmsb-frontend
     environment:
       VITE_API_GATEWAY_URL: http://localhost:8080
