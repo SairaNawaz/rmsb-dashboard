@@ -5,35 +5,86 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-function triggerDeploy() {
-  const token = process.env.GITHUB_DEPLOY_TOKEN;
-  const repo = process.env.GITHUB_REPO || 'SairaNawaz/rmsb-dashboard';
-  if (!token) return;
-
-  const body = JSON.stringify({ event_type: 'service-deploy' });
-  const [owner, repoName] = repo.split('/');
-  const req = https.request({
-    hostname: 'api.github.com',
-    path: `/repos/${owner}/${repoName}/dispatches`,
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json',
-      'User-Agent': 'rmsb-api-gateway',
-      'Content-Length': Buffer.byteLength(body),
-    },
-  });
-  req.on('error', (err) => console.error('Deploy trigger failed:', err.message));
-  req.write(body);
-  req.end();
-}
-
 // Project root is two levels up from api-gateway/src/
 const COMPOSE_PATH = path.resolve(__dirname, '../../../docker-compose.yml');
 
+// ─── GitHub API helper ────────────────────────────────────────────────────────
+
+function githubRequest(method, apiPath, token, body) {
+  return new Promise((resolve, reject) => {
+    const payload = body ? JSON.stringify(body) : null;
+    const req = https.request({
+      hostname: 'api.github.com',
+      path: apiPath,
+      method,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'rmsb-api-gateway',
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try { resolve(JSON.parse(data)); } catch { resolve(data); }
+      });
+    });
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+// ─── Auto-sync: commit updated docker-compose.yml to GitHub then deploy ───────
+
+async function syncCompose() {
+  const token = process.env.DEPLOY_TOKEN;
+  const repo = process.env.GITHUB_REPO || 'Kloudius/multiservice_process_dashboard';
+  if (!token) {
+    console.warn('DEPLOY_TOKEN not set — skipping compose sync');
+    return;
+  }
+
+  const { rows } = await pool.query(
+    `SELECT * FROM services WHERE status = 'active' ORDER BY registered_at ASC`
+  );
+  const yaml = generateComposeYaml(rows);
+
+  // Write locally so docker compose up picks it up on the current VM process
+  fs.writeFileSync(COMPOSE_PATH, yaml, 'utf8');
+
+  // Commit to GitHub so the deploy workflow gets it via git pull
+  const [owner, repoName] = repo.split('/');
+  const filePath = 'docker-compose.yml';
+
+  let sha;
+  try {
+    const existing = await githubRequest('GET', `/repos/${owner}/${repoName}/contents/${filePath}`, token);
+    sha = existing.sha;
+  } catch (e) {
+    // File doesn't exist yet — will be created
+  }
+
+  await githubRequest('PUT', `/repos/${owner}/${repoName}/contents/${filePath}`, token, {
+    message: 'chore: sync docker-compose.yml from service registry',
+    content: Buffer.from(yaml).toString('base64'),
+    ...(sha ? { sha } : {}),
+  });
+
+  console.log(`docker-compose.yml committed to ${repo} (${rows.length} active services)`);
+
+  // Trigger deploy workflow
+  await githubRequest('POST', `/repos/${owner}/${repoName}/dispatches`, token, {
+    event_type: 'service-deploy',
+  });
+}
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
+
 // GET /registry — list all services
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM services ORDER BY registered_at ASC');
     res.json(rows);
@@ -68,24 +119,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// POST /registry/compose-sync — generate and write docker-compose.yml to project root
-// Must be declared before /:id to avoid route conflict
-router.post('/compose-sync', async (req, res) => {
-  try {
-    const { rows } = await pool.query(
-      `SELECT * FROM services WHERE status != 'disabled' ORDER BY registered_at ASC`
-    );
-    const yaml = generateComposeYaml(rows);
-    fs.writeFileSync(COMPOSE_PATH, yaml, 'utf8');
-    console.log(`docker-compose.yml written to ${COMPOSE_PATH}`);
-    triggerDeploy();
-    res.json({ ok: true, path: COMPOSE_PATH, services: rows.length });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// PATCH /registry/:id — update a service (status, etc.)
+// PATCH /registry/:id — update a service status
+// Triggers compose sync+commit+deploy whenever status changes
 router.patch('/:id', async (req, res) => {
   const { status } = req.body;
   try {
@@ -95,16 +130,21 @@ router.patch('/:id', async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ error: 'Service not found' });
     res.json(rows[0]);
+
+    // Fire-and-forget: commit updated compose and deploy
+    syncCompose().catch((err) => console.error('Compose sync failed:', err.message));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// DELETE /registry/:id — remove a service
+// DELETE /registry/:id — remove a service (also re-syncs compose)
 router.delete('/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM services WHERE id = $1', [req.params.id]);
     res.status(204).end();
+
+    syncCompose().catch((err) => console.error('Compose sync failed:', err.message));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -117,7 +157,7 @@ function generateComposeYaml(services) {
     .map(
       (svc) => `
   ${svc.name}:
-    image: ${svc.ghcr_image || `ghcr.io/sairanawaz/rmsb-${svc.name}-api`}:${svc.image_tag || 'latest'}
+    image: ${svc.ghcr_image || `ghcr.io/${process.env.GHCR_OWNER || 'kloudius'}/rmsb-${svc.name}-api`}:${svc.image_tag || 'latest'}
     container_name: ${svc.container_name}
     environment:
       PORT: 3000
@@ -140,15 +180,14 @@ function generateComposeYaml(services) {
     )
     .join('\n');
 
-  // Use map syntax for all depends_on entries so we can mix condition types
   const gatewayDeps = services
     .map((svc) => `      ${svc.name}:\n        condition: service_started`)
     .join('\n');
 
   return `# ─────────────────────────────────────────────────────────
 # docker-compose.yml  —  PRODUCTION / CI  (image-based)
-# Auto-generated by RMSB Registry — do not edit manually.
-# To regenerate: Settings → Services → Sync Compose
+# Auto-generated by the service registry — do not edit manually.
+# To regenerate: activate or deactivate a service from the dashboard.
 # ─────────────────────────────────────────────────────────
 version: '3.9'
 
@@ -172,7 +211,7 @@ services:
 ${serviceBlocks}
 
   api-gateway:
-    image: ghcr.io/sairanawaz/rmsb-api-gateway:\${TAG:-latest}
+    image: ghcr.io/\${GHCR_OWNER:-kloudius}/rmsb-api-gateway:\${TAG:-latest}
     container_name: rmsb-api-gateway
     ports:
       - "8080:8080"
@@ -184,8 +223,9 @@ ${serviceBlocks}
       DB_PASSWORD: \${POSTGRES_PASSWORD}
       DB_NAME: \${POSTGRES_DB}
       ADMIN_EMAILS: \${ADMIN_EMAILS}
-      GITHUB_DEPLOY_TOKEN: \${GITHUB_DEPLOY_TOKEN}
-      GITHUB_REPO: \${GITHUB_REPO:-SairaNawaz/rmsb-dashboard}
+      DEPLOY_TOKEN: \${DEPLOY_TOKEN}
+      GITHUB_REPO: \${GITHUB_REPO:-Kloudius/multiservice_process_dashboard}
+      GHCR_OWNER: \${GHCR_OWNER:-kloudius}
       FRONTEND_URL: http://frontend:5173
 ${gatewayEnvRoutes}
     depends_on:
@@ -194,7 +234,7 @@ ${gatewayEnvRoutes}
 ${gatewayDeps}
 
   frontend:
-    image: ghcr.io/sairanawaz/rmsb-frontend:\${TAG:-latest}
+    image: ghcr.io/\${GHCR_OWNER:-kloudius}/rmsb-frontend:\${TAG:-latest}
     container_name: rmsb-frontend
     environment:
       VITE_API_GATEWAY_URL: http://localhost:8080
