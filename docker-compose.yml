@@ -52,9 +52,9 @@ services:
       DB_NAME: ${POSTGRES_DB}
       ADMIN_EMAILS: ${ADMIN_EMAILS}
       GITHUB_DEPLOY_TOKEN: ${GITHUB_DEPLOY_TOKEN}
-      GITHUB_REPO: ${GITHUB_REPO:-SairaNawaz/rmsb-dashboard}
+      GITHUB_REPO: ${GITHUB_REPO:-Kloudius/multiservice_process_dashboard}
       FRONTEND_URL: http://frontend:5173
-      S1_SERVICE_URL: http://s1:3001
+      S1_SERVICE_URL: http://s1:3000
     depends_on:
       postgres:
         condition: service_healthy
