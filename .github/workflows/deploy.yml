@@ -30,7 +30,8 @@ jobs:
           script: |
             cd multiservice_process_dashboard
             git remote set-url origin https://x-access-token:$DEPLOY_TOKEN@github.com/Kloudius/multiservice_process_dashboard.git
-            git pull
+            git fetch origin
+            git reset --hard origin/main
             git remote set-url origin https://github.com/Kloudius/multiservice_process_dashboard.git
             docker compose pull
             docker compose up -d
