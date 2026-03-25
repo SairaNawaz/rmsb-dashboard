@@ -14,7 +14,7 @@ export default function Layout() {
   return (
     <div className="shell">
       <header className="shell-header">
-        <span className="shell-brand">⬡ RMSB Platform</span>
+        <span className="shell-brand">⬡ Kloudius MultiService Process Dashboard</span>
         <div className="shell-user">
           <span className="shell-user-name">{user!.displayName}</span>
           <span className="shell-user-role">{user!.role}</span>

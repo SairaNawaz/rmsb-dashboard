@@ -43,7 +43,7 @@ export default function Login() {
       <div className="login-card">
         <div className="login-logo">
           <span className="login-logo-icon">⬡</span>
-          <span className="login-logo-text">RMSB Platform</span>
+          <span className="login-logo-text">Kloudius MultiService Process Dashboard</span>
         </div>
         <h2 className="login-title">Sign in to your account</h2>
 

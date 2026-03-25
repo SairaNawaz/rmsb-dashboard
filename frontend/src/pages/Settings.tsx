@@ -140,7 +140,7 @@ export default function Settings() {
       <div className="settings-header">
         <div>
           <h1>Services</h1>
-          <p>Register and manage microservices on the RMSB platform.</p>
+          <p>Register and manage microservices on the Kloudius MultiService Process Dashboard.</p>
         </div>
         <div className="settings-actions">
           <button className="btn-secondary" onClick={handleComposeSync} disabled={syncing}>
