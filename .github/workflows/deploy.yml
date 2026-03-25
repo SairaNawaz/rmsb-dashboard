@@ -8,12 +8,16 @@ on:
     branches: [main]
   repository_dispatch:
     types: [service-deploy]
+  push:
+    branches: [main]
+    paths:
+      - 'docker-compose.yml'
 
 jobs:
   deploy:
     name: Deploy to VM
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'repository_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'repository_dispatch' || github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Deploy via SSH

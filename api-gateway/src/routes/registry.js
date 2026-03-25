@@ -74,11 +74,6 @@ async function syncCompose() {
   });
 
   console.log(`docker-compose.yml committed to ${repo} (${rows.length} active services)`);
-
-  // Trigger deploy workflow
-  await githubRequest('POST', `/repos/${owner}/${repoName}/dispatches`, token, {
-    event_type: 'service-deploy',
-  });
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────

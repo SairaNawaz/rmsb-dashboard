@@ -3,8 +3,12 @@ name: CI — Build & Push Images
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docker-compose.yml'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'docker-compose.yml'
 
 env:
   REGISTRY: ghcr.io
