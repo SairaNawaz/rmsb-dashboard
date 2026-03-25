@@ -41,8 +41,6 @@ export default function Settings() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [syncing, setSyncing] = useState(false);
-  const [syncMsg, setSyncMsg] = useState('');
 
   function loadServices() {
     fetch(`${API}/registry`)
@@ -66,7 +64,7 @@ export default function Settings() {
         path_prefix: `/${value}`,
         container_name: `rmsb-${value}`,
         schema_name: `schema_${value}`,
-        ghcr_image: `ghcr.io/sairanawaz/rmsb-${value}-api`,
+        ghcr_image: `ghcr.io/kloudius/rmsb-${value}-api`,
       }));
     } else {
       setForm((f) => ({ ...f, [name]: value }));
@@ -112,21 +110,6 @@ export default function Settings() {
     loadServices();
   }
 
-  async function handleComposeSync() {
-    setSyncing(true);
-    setSyncMsg('');
-    try {
-      const res = await fetch(`${API}/registry/compose-sync`, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Sync failed');
-      setSyncMsg(`docker-compose.yml updated with ${data.services} service(s). Ready to deploy.`);
-    } catch {
-      setSyncMsg('Sync failed — check gateway connection.');
-    } finally {
-      setSyncing(false);
-    }
-  }
-
   function cancelForm() {
     setShowForm(false);
     setError('');
@@ -143,16 +126,11 @@ export default function Settings() {
           <p>Register and manage microservices on the Kloudius MultiService Process Dashboard.</p>
         </div>
         <div className="settings-actions">
-          <button className="btn-secondary" onClick={handleComposeSync} disabled={syncing}>
-            {syncing ? 'Generating…' : '↓ Sync Compose'}
-          </button>
           <button className="btn-primary" onClick={() => setShowForm(true)}>
             + Register Service
           </button>
         </div>
       </div>
-
-      {syncMsg && <p className="sync-msg">{syncMsg}</p>}
 
       {/* Registration form */}
       {showForm && (
