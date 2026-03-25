@@ -24,7 +24,7 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           envs: DEPLOY_TOKEN
           script: |
-            cd rmsb-dashboard
+            cd multiservice_process_dashboard
             git remote set-url origin https://x-access-token:$DEPLOY_TOKEN@github.com/Kloudius/multiservice_process_dashboard.git
             git pull
             git remote set-url origin https://github.com/Kloudius/multiservice_process_dashboard.git
