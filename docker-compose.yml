@@ -38,6 +38,21 @@ services:
       postgres:
         condition: service_healthy
 
+  client:
+    image: ghcr.io/kloudius/rmsb-client-api:latest
+    container_name: rmsb-client
+    environment:
+      PORT: 3000
+      DB_SCHEMA: schema_client
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   api-gateway:
     image: ghcr.io/${GHCR_OWNER:-kloudius}/rmsb-api-gateway:${TAG:-latest}
     container_name: rmsb-api-gateway
@@ -56,10 +71,13 @@ services:
       GHCR_OWNER: ${GHCR_OWNER:-kloudius}
       FRONTEND_URL: http://frontend:5173
       S1_SERVICE_URL: http://s1:3000
+      CLIENT_SERVICE_URL: http://client:3000
     depends_on:
       postgres:
         condition: service_healthy
       s1:
+        condition: service_started
+      client:
         condition: service_started
 
   frontend:
