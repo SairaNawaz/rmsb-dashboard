@@ -18,7 +18,7 @@ jobs:
   build-frontend:
     name: Build Frontend Image
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ vars.DEPLOY_ENV }}
     permissions:
       contents: read
       packages: write
@@ -50,7 +50,7 @@ jobs:
   build-gateway:
     name: Build API Gateway Image
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ vars.DEPLOY_ENV }}
     permissions:
       contents: read
       packages: write
