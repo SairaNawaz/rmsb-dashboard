@@ -249,3 +249,4 @@ volumes:
 }
 
 module.exports = router;
+module.exports.syncCompose = syncCompose;
