@@ -27,15 +27,16 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          envs: DEPLOY_TOKEN
+          envs: DEPLOY_TOKEN,GITHUB_REPOSITORY
           script: |
             cd multiservice_process_dashboard
-            git remote set-url origin https://x-access-token:$DEPLOY_TOKEN@github.com/Kloudius/multiservice_process_dashboard.git
+            git remote set-url origin https://x-access-token:$DEPLOY_TOKEN@github.com/$GITHUB_REPOSITORY.git
             git fetch origin
             git reset --hard origin/main
-            git remote set-url origin https://github.com/Kloudius/multiservice_process_dashboard.git
+            git remote set-url origin https://github.com/$GITHUB_REPOSITORY.git
             docker compose pull
             docker compose up -d
             echo "Deployed at $(date)"
         env:
           DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
