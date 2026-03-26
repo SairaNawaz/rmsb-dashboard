@@ -203,7 +203,7 @@ services:
 ${serviceBlocks}
 
   api-gateway:
-    image: ghcr.io/\${GHCR_OWNER:-kloudius}/rmsb-api-gateway:\${TAG:-latest}
+    image: ghcr.io/\${GHCR_OWNER}/rmsb-api-gateway:\${TAG:-latest}
     container_name: rmsb-api-gateway
     ports:
       - "8080:8080"
@@ -216,8 +216,8 @@ ${serviceBlocks}
       DB_NAME: \${POSTGRES_DB}
       ADMIN_EMAILS: \${ADMIN_EMAILS}
       DEPLOY_TOKEN: \${DEPLOY_TOKEN}
-      GITHUB_REPO: \${GITHUB_REPO:-Kloudius/multiservice_process_dashboard}
-      GHCR_OWNER: \${GHCR_OWNER:-kloudius}
+      GITHUB_REPO: \${GITHUB_REPO}
+      GHCR_OWNER: \${GHCR_OWNER}
       FRONTEND_URL: http://frontend:5173
 ${gatewayEnvRoutes}
     depends_on:
@@ -226,7 +226,7 @@ ${gatewayEnvRoutes}
 ${gatewayDeps}
 
   frontend:
-    image: ghcr.io/\${GHCR_OWNER:-kloudius}/rmsb-frontend:\${TAG:-latest}
+    image: ghcr.io/\${GHCR_OWNER}/rmsb-frontend:\${TAG:-latest}
     container_name: rmsb-frontend
     environment:
       VITE_API_GATEWAY_URL: http://localhost:8080
