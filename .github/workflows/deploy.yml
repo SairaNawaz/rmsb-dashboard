@@ -17,6 +17,7 @@ jobs:
   deploy:
     name: Deploy to VM
     runs-on: ubuntu-latest
+    environment: production
     if: ${{ github.event_name == 'repository_dispatch' || github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
