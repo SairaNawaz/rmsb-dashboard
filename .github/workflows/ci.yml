@@ -18,6 +18,7 @@ jobs:
   build-frontend:
     name: Build Frontend Image
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: read
       packages: write
@@ -26,7 +27,7 @@ jobs:
       - name: Validate required variables
         run: |
           if [ -z "$OWNER" ]; then
-            echo "Error: GHCR_OWNER repository variable is not set. Go to Settings → Variables → Actions and add GHCR_OWNER."
+            echo "Error: GHCR_OWNER environment variable is not set. Go to Settings → Environments → production and add GHCR_OWNER."
             exit 1
           fi
 
@@ -56,6 +57,7 @@ jobs:
   build-gateway:
     name: Build API Gateway Image
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: read
       packages: write
@@ -64,7 +66,7 @@ jobs:
       - name: Validate required variables
         run: |
           if [ -z "$OWNER" ]; then
-            echo "Error: GHCR_OWNER repository variable is not set. Go to Settings → Variables → Actions and add GHCR_OWNER."
+            echo "Error: GHCR_OWNER environment variable is not set. Go to Settings → Environments → production and add GHCR_OWNER."
             exit 1
           fi
 
