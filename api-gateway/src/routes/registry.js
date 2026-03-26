@@ -72,7 +72,7 @@ async function syncCompose() {
   }
 
   await githubRequest('PUT', `/repos/${owner}/${repoName}/contents/${filePath}`, token, {
-    message: 'chore: sync docker-compose.yml from service registry [skip ci]',
+    message: 'chore: sync docker-compose.yml from service registry',
     content: Buffer.from(yaml).toString('base64'),
     ...(sha ? { sha } : {}),
   });
