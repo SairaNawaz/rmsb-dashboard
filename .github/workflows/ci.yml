@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Validate required variables
         run: |
-          if [ -z "${{ vars.GHCR_OWNER }}" ]; then
+          if [ -z "$OWNER" ]; then
             echo "Error: GHCR_OWNER repository variable is not set. Go to Settings → Variables → Actions and add GHCR_OWNER."
             exit 1
           fi
@@ -63,7 +63,7 @@ jobs:
     steps:
       - name: Validate required variables
         run: |
-          if [ -z "${{ vars.GHCR_OWNER }}" ]; then
+          if [ -z "$OWNER" ]; then
             echo "Error: GHCR_OWNER repository variable is not set. Go to Settings → Variables → Actions and add GHCR_OWNER."
             exit 1
           fi
