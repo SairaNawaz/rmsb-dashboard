@@ -142,7 +142,7 @@ export default function Settings() {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="s3"
+                  placeholder="s3 — must match SERVICE_NAME in your CI workflow"
                   required
                 />
               </div>
