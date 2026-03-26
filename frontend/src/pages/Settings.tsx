@@ -20,13 +20,10 @@ const API = (import.meta.env.VITE_API_GATEWAY_URL ||
     : `http://${window.location.hostname}:8080`)) + '/api';
 
 const EMPTY_FORM = {
-  name: '',
   display_name: '',
   description: '',
   icon: '🔧',
   path_prefix: '',
-  container_name: '',
-  schema_name: '',
   repo_url: '',
   branch: 'main',
 };
@@ -37,6 +34,7 @@ export default function Settings() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [registered, setRegistered] = useState<Service | null>(null);
 
   function loadServices() {
     fetch(`${API}/registry`)
@@ -52,18 +50,7 @@ export default function Settings() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     const { name, value } = e.target;
-    if (name === 'name') {
-      // Auto-derive related fields from the service ID
-      setForm((f) => ({
-        ...f,
-        name: value,
-        path_prefix: `/${value}`,
-        container_name: `rmsb-${value}`,
-        schema_name: `schema_${value}`,
-      }));
-    } else {
-      setForm((f) => ({ ...f, [name]: value }));
-    }
+    setForm((f) => ({ ...f, [name]: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -80,6 +67,8 @@ export default function Settings() {
         const data = await res.json();
         throw new Error(data.error || 'Registration failed');
       }
+      const created = await res.json();
+      setRegistered(created);
       setForm(EMPTY_FORM);
       setShowForm(false);
       loadServices();
@@ -109,6 +98,7 @@ export default function Settings() {
     setShowForm(false);
     setError('');
     setForm(EMPTY_FORM);
+    setRegistered(null);
   }
 
   return (
@@ -127,6 +117,22 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Assigned service callout — shown after successful registration */}
+      {registered && (
+        <div className="assigned-id-callout">
+          <div className="assigned-id-details">
+            <p className="assigned-id-title">Service registered — copy these values into your CI workflow before pushing.</p>
+            <div className="assigned-id-fields">
+              <span><strong>Service ID</strong> <code>{registered.name}</code></span>
+              <span><strong>Container Name</strong> <code>{registered.container_name}</code></span>
+              <span><strong>Schema Name</strong> <code>{registered.schema_name}</code></span>
+            </div>
+            <p className="assigned-id-hint">Set <code>SERVICE_NAME: {registered.name}</code> in your CI workflow, then click <strong>Activate</strong> when ready to deploy.</p>
+          </div>
+          <button className="btn-secondary" onClick={() => setRegistered(null)}>Dismiss</button>
+        </div>
+      )}
+
       {/* Registration form */}
       {showForm && (
         <div className="register-form-card">
@@ -136,16 +142,6 @@ export default function Settings() {
           <form onSubmit={handleSubmit}>
             <p className="form-section-title">Service Details</p>
             <div className="form-grid">
-              <div className="field">
-                <label>Service ID <span className="required">*</span></label>
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="s3 — must match SERVICE_NAME in your CI workflow"
-                  required
-                />
-              </div>
               <div className="field">
                 <label>Display Name <span className="required">*</span></label>
                 <input
@@ -165,33 +161,13 @@ export default function Settings() {
                   placeholder="📦"
                 />
               </div>
-              <div className="field">
+              <div className="field field-full">
                 <label>Path Prefix <span className="required">*</span></label>
                 <input
                   name="path_prefix"
                   value={form.path_prefix}
                   onChange={handleChange}
-                  placeholder="/s3"
-                  required
-                />
-              </div>
-              <div className="field">
-                <label>Container Name <span className="required">*</span></label>
-                <input
-                  name="container_name"
-                  value={form.container_name}
-                  onChange={handleChange}
-                  placeholder="rmsb-s3"
-                  required
-                />
-              </div>
-              <div className="field">
-                <label>Schema Name <span className="required">*</span></label>
-                <input
-                  name="schema_name"
-                  value={form.schema_name}
-                  onChange={handleChange}
-                  placeholder="schema_s3"
+                  placeholder="/s1/finance"
                   required
                 />
               </div>
@@ -214,7 +190,7 @@ export default function Settings() {
                   name="repo_url"
                   value={form.repo_url}
                   onChange={handleChange}
-                  placeholder="https://github.com/sairanawaz/rmsb-s3-..."
+                  placeholder="https://github.com/kloudius/s1-device-management"
                 />
               </div>
               <div className="field">

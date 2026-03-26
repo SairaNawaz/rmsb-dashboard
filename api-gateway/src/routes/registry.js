@@ -94,12 +94,18 @@ router.get('/', async (_req, res) => {
 
 // POST /registry — register a new service
 router.post('/', async (req, res) => {
-  const {
-    name, display_name, description, icon, path_prefix,
-    container_name, schema_name, repo_url, branch,
-  } = req.body;
+  const { display_name, description, icon, path_prefix, repo_url, branch } = req.body;
 
   try {
+    // Auto-assign next service ID (s1, s2, s3 ...)
+    const { rows: counter } = await pool.query(
+      `SELECT COALESCE(MAX(CAST(substring(name FROM 2) AS int)), 0) + 1 AS next
+       FROM services WHERE name ~ '^s[0-9]+$'`
+    );
+    const name = `s${counter[0].next}`;
+    const container_name = `rmsb-${name}`;
+    const schema_name = `schema_${name}`;
+
     const { rows } = await pool.query(
       `INSERT INTO services
          (name, display_name, description, icon, path_prefix,
