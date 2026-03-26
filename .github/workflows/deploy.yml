@@ -24,8 +24,8 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           envs: DEPLOY_TOKEN,GITHUB_REPOSITORY
           script: |
