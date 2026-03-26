@@ -107,7 +107,7 @@ router.get('/next-id', async (_req, res) => {
 
 // POST /registry — register a new service
 router.post('/', async (req, res) => {
-  const { display_name, description, icon, path_prefix, repo_url, branch } = req.body;
+  const { display_name, description, icon, repo_url, branch } = req.body;
 
   try {
     // Auto-assign next service ID (s1, s2, s3 ...)
@@ -116,6 +116,7 @@ router.post('/', async (req, res) => {
        FROM services WHERE name ~ '^s[0-9]+$'`
     );
     const name = `s${counter[0].next}`;
+    const path_prefix = `/${name}`;
     const container_name = `rmsb-${name}`;
     const schema_name = `schema_${name}`;
 

@@ -23,7 +23,6 @@ const EMPTY_FORM = {
   display_name: '',
   description: '',
   icon: '🔧',
-  path_suffix: '',
   repo_url: '',
   branch: 'main',
 };
@@ -66,13 +65,11 @@ export default function Settings() {
     e.preventDefault();
     setSubmitting(true);
     setError('');
-    const suffix = form.path_suffix.replace(/^\/+/, '');
-    const path_prefix = suffix ? `/${nextId}/${suffix}` : `/${nextId}`;
     try {
       const res = await fetch(`${API}/registry`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, path_prefix }),
+        body: JSON.stringify(form),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -176,18 +173,6 @@ export default function Settings() {
                   onChange={handleChange}
                   placeholder="📦"
                 />
-              </div>
-              <div className="field field-full">
-                <label>Path Prefix</label>
-                <div className="path-prefix-input">
-                  <span className="path-prefix-locked">/{nextId}/</span>
-                  <input
-                    name="path_suffix"
-                    value={form.path_suffix}
-                    onChange={handleChange}
-                    placeholder="finance"
-                  />
-                </div>
               </div>
               <div className="field field-full">
                 <label>Description</label>
