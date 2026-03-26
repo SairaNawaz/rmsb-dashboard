@@ -671,6 +671,89 @@ body {
   color: #856404;
 }
 
+/* ─── Assigned ID callout ─────────────────────────────── */
+
+.assigned-id-callout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #eef6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.assigned-id-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e40af;
+  margin: 0 0 0.5rem;
+}
+
+.assigned-id-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.assigned-id-fields span {
+  font-size: 0.82rem;
+  color: #1e3a5f;
+}
+
+.assigned-id-hint {
+  font-size: 0.8rem;
+  color: #374151;
+  margin: 0;
+}
+
+/* ─── Read-only input ─────────────────────────────────── */
+
+.input-readonly {
+  background: #f4f4f5;
+  color: #71717a;
+  cursor: default;
+  border-color: #e4e4e7 !important;
+}
+
+/* ─── Split path prefix input ────────────────────────── */
+
+.path-prefix-input {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.path-prefix-input:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.path-prefix-locked {
+  padding: 0.45rem 0.75rem;
+  background: #f4f4f5;
+  color: #71717a;
+  font-size: 0.875rem;
+  font-family: monospace;
+  border-right: 1px solid #e4e4e7;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.path-prefix-input input {
+  flex: 1;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0.45rem 0.75rem;
+}
+
 .action-btn.delete {
   background: #f8d7da;
   color: #842029;

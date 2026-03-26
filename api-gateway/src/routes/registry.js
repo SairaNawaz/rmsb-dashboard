@@ -92,6 +92,19 @@ router.get('/', async (_req, res) => {
   }
 });
 
+// GET /registry/next-id — preview the next auto-assigned service ID
+router.get('/next-id', async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT COALESCE(MAX(CAST(substring(name FROM 2) AS int)), 0) + 1 AS next
+       FROM services WHERE name ~ '^s[0-9]+$'`
+    );
+    res.json({ name: `s${rows[0].next}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /registry — register a new service
 router.post('/', async (req, res) => {
   const { display_name, description, icon, path_prefix, repo_url, branch } = req.body;

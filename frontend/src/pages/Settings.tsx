@@ -23,7 +23,7 @@ const EMPTY_FORM = {
   display_name: '',
   description: '',
   icon: '🔧',
-  path_prefix: '',
+  path_suffix: '',
   repo_url: '',
   branch: 'main',
 };
@@ -32,6 +32,7 @@ export default function Settings() {
   const [services, setServices] = useState<Service[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [nextId, setNextId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [registered, setRegistered] = useState<Service | null>(null);
@@ -40,6 +41,14 @@ export default function Settings() {
     fetch(`${API}/registry`)
       .then((r) => r.json())
       .then((data) => setServices(Array.isArray(data) ? data : []));
+  }
+
+  function openForm() {
+    setRegistered(null);
+    fetch(`${API}/registry/next-id`)
+      .then((r) => r.json())
+      .then((data) => setNextId(data.name || ''));
+    setShowForm(true);
   }
 
   useEffect(() => {
@@ -57,11 +66,13 @@ export default function Settings() {
     e.preventDefault();
     setSubmitting(true);
     setError('');
+    const suffix = form.path_suffix.replace(/^\/+/, '');
+    const path_prefix = suffix ? `/${nextId}/${suffix}` : `/${nextId}`;
     try {
       const res = await fetch(`${API}/registry`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, path_prefix }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -70,6 +81,7 @@ export default function Settings() {
       const created = await res.json();
       setRegistered(created);
       setForm(EMPTY_FORM);
+      setNextId('');
       setShowForm(false);
       loadServices();
     } catch (err: unknown) {
@@ -98,7 +110,7 @@ export default function Settings() {
     setShowForm(false);
     setError('');
     setForm(EMPTY_FORM);
-    setRegistered(null);
+    setNextId('');
   }
 
   return (
@@ -111,7 +123,7 @@ export default function Settings() {
           <p>Register and manage microservices on the Kloudius MultiService Process Dashboard.</p>
         </div>
         <div className="settings-actions">
-          <button className="btn-primary" onClick={() => setShowForm(true)}>
+          <button className="btn-primary" onClick={openForm}>
             + Register Service
           </button>
         </div>
@@ -143,6 +155,10 @@ export default function Settings() {
             <p className="form-section-title">Service Details</p>
             <div className="form-grid">
               <div className="field">
+                <label>Service ID</label>
+                <input value={nextId || 'Loading…'} readOnly className="input-readonly" />
+              </div>
+              <div className="field">
                 <label>Display Name <span className="required">*</span></label>
                 <input
                   name="display_name"
@@ -162,14 +178,16 @@ export default function Settings() {
                 />
               </div>
               <div className="field field-full">
-                <label>Path Prefix <span className="required">*</span></label>
-                <input
-                  name="path_prefix"
-                  value={form.path_prefix}
-                  onChange={handleChange}
-                  placeholder="/s1/finance"
-                  required
-                />
+                <label>Path Prefix</label>
+                <div className="path-prefix-input">
+                  <span className="path-prefix-locked">/{nextId}/</span>
+                  <input
+                    name="path_suffix"
+                    value={form.path_suffix}
+                    onChange={handleChange}
+                    placeholder="finance"
+                  />
+                </div>
               </div>
               <div className="field field-full">
                 <label>Description</label>
@@ -208,7 +226,7 @@ export default function Settings() {
               <button type="button" className="btn-secondary" onClick={cancelForm}>
                 Cancel
               </button>
-              <button type="submit" className="btn-primary" disabled={submitting}>
+              <button type="submit" className="btn-primary" disabled={submitting || !nextId}>
                 {submitting ? 'Registering…' : 'Register Service'}
               </button>
             </div>
