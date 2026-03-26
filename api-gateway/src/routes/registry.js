@@ -41,9 +41,13 @@ function githubRequest(method, apiPath, token, body) {
 
 async function syncCompose() {
   const token = process.env.DEPLOY_TOKEN;
-  const repo = process.env.GITHUB_REPO || 'Kloudius/multiservice_process_dashboard';
+  const repo = process.env.GITHUB_REPO;
   if (!token) {
     console.warn('DEPLOY_TOKEN not set — skipping compose sync');
+    return;
+  }
+  if (!repo) {
+    console.warn('GITHUB_REPO not set — skipping compose sync');
     return;
   }
 
