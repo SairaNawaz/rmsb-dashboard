@@ -23,21 +23,6 @@ services:
       timeout: 5s
       retries: 10
 
-  s1:
-    image: ghcr.io/sairanawaz/rmsb-s1-api:latest
-    container_name: rmsb-s1
-    environment:
-      PORT: 3000
-      DB_SCHEMA: schema_s1
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_NAME: ${POSTGRES_DB}
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   client:
     image: ghcr.io/kloudius/rmsb-client-api:latest
     container_name: rmsb-client
@@ -70,13 +55,10 @@ services:
       GITHUB_REPO: ${GITHUB_REPO:-Kloudius/multiservice_process_dashboard}
       GHCR_OWNER: ${GHCR_OWNER:-kloudius}
       FRONTEND_URL: http://frontend:5173
-      S1_SERVICE_URL: http://s1:3000
       CLIENT_SERVICE_URL: http://client:3000
     depends_on:
       postgres:
         condition: service_healthy
-      s1:
-        condition: service_started
       client:
         condition: service_started
 
