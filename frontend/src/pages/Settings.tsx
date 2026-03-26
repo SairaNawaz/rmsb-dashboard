@@ -12,8 +12,6 @@ interface Service {
   status: string;
   repo_url: string;
   branch: string;
-  ghcr_image: string;
-  image_tag: string;
 }
 
 const API = (import.meta.env.VITE_API_GATEWAY_URL ||
@@ -31,8 +29,6 @@ const EMPTY_FORM = {
   schema_name: '',
   repo_url: '',
   branch: 'main',
-  ghcr_image: '',
-  image_tag: 'latest',
 };
 
 export default function Settings() {
@@ -64,7 +60,6 @@ export default function Settings() {
         path_prefix: `/${value}`,
         container_name: `rmsb-${value}`,
         schema_name: `schema_${value}`,
-        ghcr_image: `ghcr.io/kloudius/rmsb-${value}-api`,
       }));
     } else {
       setForm((f) => ({ ...f, [name]: value }));
@@ -229,24 +224,6 @@ export default function Settings() {
                   value={form.branch}
                   onChange={handleChange}
                   placeholder="main"
-                />
-              </div>
-              <div className="field">
-                <label>GHCR Image</label>
-                <input
-                  name="ghcr_image"
-                  value={form.ghcr_image}
-                  onChange={handleChange}
-                  placeholder="ghcr.io/sairanawaz/rmsb-s3-api"
-                />
-              </div>
-              <div className="field">
-                <label>Image Tag</label>
-                <input
-                  name="image_tag"
-                  value={form.image_tag}
-                  onChange={handleChange}
-                  placeholder="latest"
                 />
               </div>
             </div>

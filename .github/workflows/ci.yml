@@ -12,7 +12,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  OWNER: kloudius
+  OWNER: ${{ vars.GHCR_OWNER }}
 
 jobs:
   build-frontend:
@@ -23,6 +23,13 @@ jobs:
       packages: write
 
     steps:
+      - name: Validate required variables
+        run: |
+          if [ -z "${{ vars.GHCR_OWNER }}" ]; then
+            echo "Error: GHCR_OWNER repository variable is not set. Go to Settings → Variables → Actions and add GHCR_OWNER."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -54,6 +61,13 @@ jobs:
       packages: write
 
     steps:
+      - name: Validate required variables
+        run: |
+          if [ -z "${{ vars.GHCR_OWNER }}" ]; then
+            echo "Error: GHCR_OWNER repository variable is not set. Go to Settings → Variables → Actions and add GHCR_OWNER."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 

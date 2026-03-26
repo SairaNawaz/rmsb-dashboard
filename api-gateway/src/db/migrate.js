@@ -14,17 +14,15 @@ async function migrate() {
       status         VARCHAR(20)  DEFAULT 'pending',
       repo_url       TEXT,
       branch         VARCHAR(100) DEFAULT 'main',
-      ghcr_image     TEXT,
-      image_tag      VARCHAR(50)  DEFAULT 'latest',
       registered_at  TIMESTAMP    DEFAULT NOW(),
       updated_at     TIMESTAMP    DEFAULT NOW()
     )
   `);
 
-  // Drop legacy port column if it exists from older schema
-  await pool.query(`
-    ALTER TABLE services DROP COLUMN IF EXISTS port
-  `);
+  // Drop legacy columns if they exist from older schema
+  await pool.query(`ALTER TABLE services DROP COLUMN IF EXISTS port`);
+  await pool.query(`ALTER TABLE services DROP COLUMN IF EXISTS ghcr_image`);
+  await pool.query(`ALTER TABLE services DROP COLUMN IF EXISTS image_tag`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS platform_users (

@@ -92,20 +92,19 @@ router.get('/', async (_req, res) => {
 router.post('/', async (req, res) => {
   const {
     name, display_name, description, icon, path_prefix,
-    container_name, schema_name, repo_url, branch, ghcr_image, image_tag,
+    container_name, schema_name, repo_url, branch,
   } = req.body;
 
   try {
     const { rows } = await pool.query(
       `INSERT INTO services
          (name, display_name, description, icon, path_prefix,
-          container_name, schema_name, repo_url, branch, ghcr_image, image_tag)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+          container_name, schema_name, repo_url, branch)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
        RETURNING *`,
       [
         name, display_name, description || null, icon || '🔧', path_prefix,
         container_name, schema_name, repo_url || null, branch || 'main',
-        ghcr_image || null, image_tag || 'latest',
       ]
     );
     res.status(201).json(rows[0]);
@@ -152,7 +151,7 @@ function generateComposeYaml(services) {
     .map(
       (svc) => `
   ${svc.name}:
-    image: ${svc.ghcr_image || `ghcr.io/${process.env.GHCR_OWNER || 'kloudius'}/rmsb-${svc.name}-api`}:${svc.image_tag || 'latest'}
+    image: ghcr.io/\${GHCR_OWNER}/rmsb-${svc.name}-api:\${TAG:-latest}
     container_name: ${svc.container_name}
     environment:
       PORT: 3000
