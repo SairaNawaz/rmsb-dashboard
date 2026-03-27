@@ -289,6 +289,12 @@ export default function Settings() {
                       </button>
                     )}
                     <button
+                      className="action-btn"
+                      onClick={() => setRegistered(svc)}
+                    >
+                      Setup Info
+                    </button>
+                    <button
                       className="action-btn delete"
                       onClick={() => handleDelete(svc.id)}
                     >
