@@ -6,7 +6,11 @@ COPY package*.json ./
 RUN npm install --legacy-peer-deps
 COPY . .
 ARG VITE_ADMIN_EMAILS
+ARG VITE_APP_NAME
+ARG VITE_API_GATEWAY_URL
 ENV VITE_ADMIN_EMAILS=$VITE_ADMIN_EMAILS
+ENV VITE_APP_NAME=$VITE_APP_NAME
+ENV VITE_API_GATEWAY_URL=$VITE_API_GATEWAY_URL
 RUN npm run build
 
 # ── Stage 2: Serve static files ───────────────────────────
