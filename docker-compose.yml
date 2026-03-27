@@ -27,6 +27,8 @@ services:
     container_name: rmsb-api-gateway
     ports:
       - "8080:8080"
+    volumes:
+      - ./.env:/app/.env.host
     environment:
       PORT: 8080
       DB_HOST: postgres
