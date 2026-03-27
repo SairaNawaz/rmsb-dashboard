@@ -130,13 +130,29 @@ export default function Settings() {
       {registered && (
         <div className="assigned-id-callout">
           <div className="assigned-id-details">
-            <p className="assigned-id-title">Service registered — copy these values into your CI workflow before pushing.</p>
+            <p className="assigned-id-title">Service registered — configure your CI before pushing.</p>
+
             <div className="assigned-id-fields">
               <span><strong>Service ID</strong> <code>{registered.name}</code></span>
+              <span><strong>Path Prefix</strong> <code>{registered.path_prefix}</code></span>
               <span><strong>Container Name</strong> <code>{registered.container_name}</code></span>
               <span><strong>Schema Name</strong> <code>{registered.schema_name}</code></span>
             </div>
-            <p className="assigned-id-hint">Set <code>SERVICE_NAME: {registered.name}</code> in your CI workflow, then click <strong>Activate</strong> when ready to deploy.</p>
+
+            <p className="assigned-id-hint" style={{ marginTop: '0.75rem' }}><strong>GitHub Actions</strong> — add to repo <code>production</code> environment:</p>
+            <div className="assigned-id-fields">
+              <span><strong>Variable</strong> <code>SERVICE_NAME = {registered.name}</code></span>
+              <span><strong>Variable</strong> <code>VITE_BASE_PATH = {registered.path_prefix}</code></span>
+              <span><strong>Variable</strong> <code>DASHBOARD_REPO = rmsb-dashboard</code></span>
+              <span><strong>Secret</strong> <code>DEPLOY_TOKEN = &lt;PAT with Contents read+write on rmsb-dashboard&gt;</code></span>
+            </div>
+
+            <p className="assigned-id-hint" style={{ marginTop: '0.75rem' }}><strong>Jenkins</strong> — set in Jenkins job → Build Environment:</p>
+            <div className="assigned-id-fields">
+              <span><strong>Env var</strong> <code>SERVICE_NAME = {registered.name}</code></span>
+              <span><strong>Env var</strong> <code>VITE_BASE_PATH = {registered.path_prefix}</code></span>
+              <span><strong>Credentials required</strong> <code>github-token</code>, <code>jenkins-admin</code></span>
+            </div>
           </div>
           <button className="btn-secondary" onClick={() => setRegistered(null)}>Dismiss</button>
         </div>
