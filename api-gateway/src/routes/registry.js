@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const https = require('https');
 
 // Project root is two levels up from api-gateway/src/
@@ -35,6 +36,66 @@ function githubRequest(method, apiPath, token, body) {
     if (payload) req.write(payload);
     req.end();
   });
+}
+
+// ─── Per-service DB provisioning ──────────────────────────────────────────────
+
+// Path to host .env file, mounted into the container at /app/.env.host
+const HOST_ENV_PATH = '/app/.env.host';
+
+async function provisionServiceDB(service) {
+  const { name, schema_name } = service;
+  const db_user = `svc_${name}`;
+  const db_password = crypto.randomBytes(16).toString('hex');
+
+  // Create schema
+  await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schema_name}"`);
+
+  // Create DB user (skip if already exists)
+  try {
+    await pool.query(`CREATE USER "${db_user}" WITH PASSWORD '${db_password}'`);
+  } catch (err) {
+    if (err.code === '42710') {
+      // Role already exists — update password in case it changed
+      await pool.query(`ALTER USER "${db_user}" WITH PASSWORD '${db_password}'`);
+    } else {
+      throw err;
+    }
+  }
+
+  // Revoke public access and grant only to the service user
+  await pool.query(`REVOKE ALL ON SCHEMA "${schema_name}" FROM PUBLIC`);
+  await pool.query(`GRANT USAGE, CREATE ON SCHEMA "${schema_name}" TO "${db_user}"`);
+  await pool.query(`GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA "${schema_name}" TO "${db_user}"`);
+  await pool.query(`GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA "${schema_name}" TO "${db_user}"`);
+  await pool.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA "${schema_name}" GRANT ALL ON TABLES    TO "${db_user}"`);
+  await pool.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA "${schema_name}" GRANT ALL ON SEQUENCES TO "${db_user}"`);
+
+  // Persist credentials in services table
+  await pool.query(
+    `UPDATE services SET db_user = $1, db_password = $2 WHERE name = $3`,
+    [db_user, db_password, name]
+  );
+
+  // Append per-service env vars to the host .env file so docker compose picks them up
+  const envKey = name.toUpperCase();
+  const envBlock = `\n# ${name} service DB credentials (auto-provisioned)\n${envKey}_DB_USER=${db_user}\n${envKey}_DB_PASSWORD=${db_password}\n`;
+  try {
+    // Remove any existing entry for this service before appending
+    if (fs.existsSync(HOST_ENV_PATH)) {
+      let content = fs.readFileSync(HOST_ENV_PATH, 'utf8');
+      // Strip previous block for this service if re-activating
+      content = content.replace(
+        new RegExp(`\\n# ${name} service DB credentials.*?\\n${envKey}_DB_PASSWORD=[^\\n]*\\n`, 's'),
+        ''
+      );
+      fs.writeFileSync(HOST_ENV_PATH, content + envBlock, 'utf8');
+    }
+  } catch (e) {
+    console.warn(`Could not update host .env file: ${e.message}`);
+  }
+
+  return { db_user, db_password };
 }
 
 // ─── Auto-sync: commit updated docker-compose.yml to GitHub then deploy ───────
@@ -149,8 +210,18 @@ router.patch('/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Service not found' });
     res.json(rows[0]);
 
-    // Fire-and-forget: commit updated compose and deploy
-    syncCompose().catch((err) => console.error('Compose sync failed:', err.message));
+    // Fire-and-forget: provision DB then sync compose
+    (async () => {
+      try {
+        if (status === 'active') {
+          await provisionServiceDB(rows[0]);
+          console.log(`DB provisioned for ${rows[0].name}`);
+        }
+        await syncCompose();
+      } catch (err) {
+        console.error('Post-activation task failed:', err.message);
+      }
+    })();
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -172,23 +243,24 @@ router.delete('/:id', async (req, res) => {
 
 function generateComposeYaml(services) {
   const serviceBlocks = services
-    .map(
-      (svc) => `
+    .map((svc) => {
+      const envKey = svc.name.toUpperCase();
+      return `
   ${svc.name}:
     image: ghcr.io/\${GHCR_OWNER}/rmsb-${svc.name}-api:\${TAG:-latest}
     container_name: ${svc.container_name}
     environment:
       PORT: 3000
-      DB_SCHEMA: ${svc.schema_name}
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: \${POSTGRES_USER}
-      DB_PASSWORD: \${POSTGRES_PASSWORD}
       DB_NAME: \${POSTGRES_DB}
+      DB_SCHEMA: ${svc.schema_name}
+      DB_USER: \${${envKey}_DB_USER}
+      DB_PASSWORD: \${${envKey}_DB_PASSWORD}
     depends_on:
       postgres:
-        condition: service_healthy`
-    )
+        condition: service_healthy`;
+    })
     .join('\n');
 
   const gatewayEnvRoutes = services
@@ -231,6 +303,8 @@ ${serviceBlocks}
     container_name: rmsb-api-gateway
     ports:
       - "8080:8080"
+    volumes:
+      - ./.env:/app/.env.host
     environment:
       PORT: 8080
       DB_HOST: postgres
