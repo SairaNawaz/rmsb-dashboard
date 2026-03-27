@@ -117,7 +117,7 @@ export default function Settings() {
       <div className="settings-header">
         <div>
           <h1>Services</h1>
-          <p>Register and manage microservices on the Kloudius MultiService Process Dashboard.</p>
+          <p>Register and manage microservices on the {import.meta.env.VITE_APP_NAME}.</p>
         </div>
         <div className="settings-actions">
           <button className="btn-primary" onClick={openForm}>
@@ -193,7 +193,7 @@ export default function Settings() {
                   name="repo_url"
                   value={form.repo_url}
                   onChange={handleChange}
-                  placeholder="https://github.com/kloudius/s1-device-management"
+                  placeholder="https://github.com/your-org/your-service"
                 />
               </div>
               <div className="field">

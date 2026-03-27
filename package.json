@@ -1,7 +1,7 @@
 {
   "name": "multiservice-process-dashboard",
   "version": "1.0.0",
-  "description": "Kloudius MultiService Process Dashboard — login shell + API gateway",
+  "description": "MultiService Process Dashboard — login shell + API gateway",
   "scripts": {
     "setup": "npm install --prefix api-gateway && npm install --prefix frontend",
     "dev": "concurrently \"npm run dev --prefix api-gateway\" \"npm run dev --prefix frontend\"",
