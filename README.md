@@ -90,6 +90,6 @@ npm run dev   # frontend on :5173, gateway on :8080
 ## Adding a New Service
 
 1. Use [rmsb-service-template](https://github.com/SairaNawaz/rmsb-service-template) to create a new repo
-2. Follow the template README to wire up your stack
+2. Choose CI system — GitHub Actions or Jenkins (see template docs)
 3. Register the service via the dashboard Settings page
-4. Push to main — CI builds the image, CD deploys it
+4. Push to main — CI builds the image, triggers dashboard deploy
