@@ -1,12 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-const API = (import.meta.env.VITE_API_GATEWAY_URL ||
-  (window.location.protocol === 'https:'
-    ? window.location.origin
-    : `http://${window.location.hostname}:8080`)) + '/api';
-import { useMsal } from '@azure/msal-react';
-import { loginRequest, graphRequest } from '../auth/msalConfig';
-
 interface User {
   username: string;
   displayName: string;
@@ -18,9 +11,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => { ok: boolean; error?: string };
-  loginWithMicrosoft: () => Promise<void>;
   logout: () => void;
-  refreshGraphToken: () => Promise<string | null>;
 }
 
 interface MockUser extends User {
@@ -29,15 +20,12 @@ interface MockUser extends User {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Mock credentials — fallback for local dev / admin access
 const MOCK_USERS: MockUser[] = [
   { username: 'admin', password: 'demo', displayName: 'Admin User', role: 'Admin' },
   { username: 'user',  password: 'demo', displayName: 'Jane Smith',  role: 'Viewer' },
 ];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { instance } = useMsal();
-
   const [user, setUser] = useState<User | null>(() => {
     const stored = localStorage.getItem('rmsb_user');
     return stored ? (JSON.parse(stored) as User) : null;
@@ -48,19 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('rmsb_user', JSON.stringify(u));
   }
 
-  async function refreshGraphToken(): Promise<string | null> {
-    const accounts = instance.getAllAccounts();
-    if (!accounts.length) return null;
-    try {
-      const result = await instance.acquireTokenSilent({ ...graphRequest, account: accounts[0] });
-      localStorage.setItem('rmsb_graph_token', result.accessToken);
-      return result.accessToken;
-    } catch {
-      return null;
-    }
-  }
-
-  // Mock login (admin backdoor)
   function login(username: string, password: string): { ok: boolean; error?: string } {
     const match = MOCK_USERS.find(
       (u) => u.username === username && u.password === password
@@ -71,59 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }
 
-  // Microsoft login via MSAL popup
-  async function loginWithMicrosoft(): Promise<void> {
-    const result = await instance.loginPopup(loginRequest);
-    const account = result.account;
-
-    // Acquire and store Graph token for org user listing
-    try {
-      const graphResult = await instance.acquireTokenSilent({ ...graphRequest, account: result.account });
-      localStorage.setItem('rmsb_graph_token', graphResult.accessToken);
-    } catch {
-      // non-fatal — user listing may be unavailable
-    }
-
-    // Resolve role from gateway (checks ADMIN_EMAILS env, then DB, defaults to Viewer)
-    let role = 'Viewer';
-    try {
-      const res = await fetch(`${API}/users/resolve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: account.username,
-          display_name: account.name ?? account.username,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        role = data.role ?? 'Viewer';
-      }
-    } catch {
-      // gateway unreachable — fall back to Viewer
-    }
-
-    saveUser({
-      username: account.username,
-      displayName: account.name ?? account.username,
-      role,
-      email: account.username,
-    });
-  }
-
   function logout(): void {
     setUser(null);
     localStorage.removeItem('rmsb_user');
-    localStorage.removeItem('rmsb_graph_token');
-    // Sign out of MSAL session if active
-    const accounts = instance.getAllAccounts();
-    if (accounts.length > 0) {
-      instance.logoutPopup({ account: accounts[0] }).catch(() => {});
-    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, loginWithMicrosoft, logout, refreshGraphToken }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
