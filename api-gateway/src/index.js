@@ -43,10 +43,10 @@ async function loadServices() {
 }
 
 function getProxy(service) {
-  const key = service.container_name;
+  const key = service.name;
   if (!proxyCache[key]) {
     proxyCache[key] = createProxyMiddleware({
-      target: `http://${service.container_name}:3000`,
+      target: `http://${service.name}:3000`,
       changeOrigin: true,
       pathRewrite: { [`^${service.path_prefix}`]: '' },
       on: {
