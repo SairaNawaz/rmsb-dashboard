@@ -25,6 +25,7 @@ pipeline {
                     sh '''
                         echo $GITHUB_TOKEN | docker login ghcr.io -u sairanawaz --password-stdin
                         docker build \
+                            --platform linux/arm64 \
                             --build-arg VITE_APP_NAME="$VITE_APP_NAME" \
                             --build-arg VITE_API_GATEWAY_URL="$VITE_API_GATEWAY_URL" \
                             --build-arg VITE_ADMIN_EMAILS="saira.nawaz@kloudius.com" \
@@ -41,6 +42,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                     sh '''
                         docker build \
+                            --platform linux/arm64 \
                             -t $REGISTRY/$OWNER/rmsb-api-gateway:latest \
                             ./api-gateway
                         docker push $REGISTRY/$OWNER/rmsb-api-gateway:latest
