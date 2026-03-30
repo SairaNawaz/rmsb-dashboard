@@ -63,7 +63,9 @@ async function provisionServiceDB(service) {
     }
   }
 
-  // Revoke public access and grant only to the service user
+  // Grant database-level access to the service user
+  const dbName = process.env.DB_NAME;
+  await pool.query(`GRANT CONNECT, CREATE ON DATABASE "${dbName}" TO "${db_user}"`);
   await pool.query(`REVOKE ALL ON SCHEMA "${schema_name}" FROM PUBLIC`);
   await pool.query(`GRANT USAGE, CREATE ON SCHEMA "${schema_name}" TO "${db_user}"`);
   await pool.query(`GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA "${schema_name}" TO "${db_user}"`);
