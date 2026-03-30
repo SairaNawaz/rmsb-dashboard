@@ -1,12 +1,17 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const fs = require('fs');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const pool = require('./db');
 const migrate = require('./db/migrate');
 const registryRouter = require('./routes/registry');
 const usersRouter = require('./routes/users');
 const graphRouter = require('./routes/graph');
+
+const HOST_ENV_PATH = '/app/.env.host';
+const DOCKER_SOCK   = '/var/run/docker.sock';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -74,6 +79,55 @@ app.use(createProxyMiddleware({
   on: { error: (err, req, res) => res.status(502).json({ error: 'Frontend unavailable' }) },
 }));
 
+// ─── Startup env sync ─────────────────────────────────────────────────────────
+// On startup, write any service DB credentials that are missing from the host
+// .env file (happens when the volume mount wasn't present on the previous run),
+// then restart the affected service containers so they pick up the new values.
+
+function dockerPost(path) {
+  return new Promise((resolve, reject) => {
+    const req = http.request({ socketPath: DOCKER_SOCK, path, method: 'POST' }, (res) => {
+      res.resume();
+      res.on('end', resolve);
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+async function syncServiceCredsToEnv() {
+  if (!fs.existsSync(HOST_ENV_PATH)) return;
+
+  const { rows } = await pool.query(
+    `SELECT name, container_name, db_user, db_password FROM services WHERE db_user IS NOT NULL`
+  );
+
+  let content = fs.readFileSync(HOST_ENV_PATH, 'utf8');
+  const toRestart = [];
+
+  for (const svc of rows) {
+    const envKey = svc.name.toUpperCase();
+    if (!content.includes(`${envKey}_DB_USER=`)) {
+      content += `\n# ${svc.name} service DB credentials (auto-provisioned)\n${envKey}_DB_USER=${svc.db_user}\n${envKey}_DB_PASSWORD=${svc.db_password}\n`;
+      toRestart.push(svc.container_name);
+    }
+  }
+
+  if (toRestart.length === 0) return;
+
+  fs.writeFileSync(HOST_ENV_PATH, content, 'utf8');
+  console.log(`Wrote missing DB credentials for: ${toRestart.join(', ')}`);
+
+  for (const name of toRestart) {
+    try {
+      await dockerPost(`/containers/${name}/restart`);
+      console.log(`Restarted ${name} with provisioned DB credentials`);
+    } catch (e) {
+      console.warn(`Could not restart ${name}: ${e.message}`);
+    }
+  }
+}
+
 // ─── Startup ──────────────────────────────────────────────────────────────────
 
 async function start() {
@@ -82,6 +136,8 @@ async function start() {
     await loadServices();
     // Reload every 30 s to pick up status changes without restart
     setInterval(loadServices, 30_000);
+    // Write any missing service DB credentials to host .env and restart affected containers
+    syncServiceCredsToEnv().catch((err) => console.warn('Credential sync failed:', err.message));
   } catch (err) {
     console.error('Startup error:', err.message);
   }

@@ -341,6 +341,7 @@ ${serviceBlocks}
       - "8080:8080"
     volumes:
       - ./.env:/app/.env.host
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       PORT: 8080
       DB_HOST: postgres
