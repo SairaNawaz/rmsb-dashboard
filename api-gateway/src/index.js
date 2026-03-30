@@ -5,7 +5,6 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const pool = require('./db');
 const migrate = require('./db/migrate');
 const registryRouter = require('./routes/registry');
-const { syncCompose } = registryRouter;
 const usersRouter = require('./routes/users');
 const graphRouter = require('./routes/graph');
 
@@ -83,8 +82,6 @@ async function start() {
     await loadServices();
     // Reload every 30 s to pick up status changes without restart
     setInterval(loadServices, 30_000);
-    // Sync compose on startup to self-heal any git/DB divergence
-    syncCompose().catch((err) => console.warn('Startup compose sync failed:', err.message));
   } catch (err) {
     console.error('Startup error:', err.message);
   }
