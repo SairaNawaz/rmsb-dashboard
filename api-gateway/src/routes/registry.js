@@ -229,13 +229,47 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// DELETE /registry/:id — remove a service (also re-syncs compose)
+// DELETE /registry/:id — remove a service, clean up DB + .env, re-sync compose
 router.delete('/:id', async (req, res) => {
   try {
+    const { rows } = await pool.query('SELECT * FROM services WHERE id = $1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Service not found' });
+    const svc = rows[0];
+
     await pool.query('DELETE FROM services WHERE id = $1', [req.params.id]);
     res.status(204).end();
 
-    syncCompose().catch((err) => console.error('Compose sync failed:', err.message));
+    // Fire-and-forget: clean up DB schema/user, .env, then sync compose
+    (async () => {
+      try {
+        // Drop schema and all its objects
+        await pool.query(`DROP SCHEMA IF EXISTS "${svc.schema_name}" CASCADE`);
+
+        // Drop the dedicated DB user
+        const db_user = `svc_${svc.name}`;
+        await pool.query(`DROP USER IF EXISTS "${db_user}"`);
+
+        // Remove credentials from host .env file
+        const envKey = svc.name.toUpperCase();
+        try {
+          if (fs.existsSync(HOST_ENV_PATH)) {
+            let content = fs.readFileSync(HOST_ENV_PATH, 'utf8');
+            content = content.replace(
+              new RegExp(`\\n# ${svc.name} service DB credentials.*?\\n${envKey}_DB_PASSWORD=[^\\n]*\\n`, 's'),
+              ''
+            );
+            fs.writeFileSync(HOST_ENV_PATH, content, 'utf8');
+          }
+        } catch (e) {
+          console.warn(`Could not update host .env file: ${e.message}`);
+        }
+
+        console.log(`Cleaned up DB and .env for ${svc.name}`);
+        await syncCompose();
+      } catch (err) {
+        console.error('Post-delete cleanup failed:', err.message);
+      }
+    })();
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
