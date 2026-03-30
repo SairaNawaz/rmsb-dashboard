@@ -293,6 +293,7 @@ function generateComposeYaml(services) {
       DB_SCHEMA: ${svc.schema_name}
       DB_USER: \${${envKey}_DB_USER}
       DB_PASSWORD: \${${envKey}_DB_PASSWORD}
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy`;
@@ -325,6 +326,7 @@ services:
       POSTGRES_DB: \${POSTGRES_DB}
     ports:
       - "5433:5432"
+    restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -355,6 +357,7 @@ ${serviceBlocks}
       GHCR_OWNER: \${GHCR_OWNER}
       FRONTEND_URL: http://frontend:5173
 ${gatewayEnvRoutes}
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
@@ -363,6 +366,7 @@ ${gatewayDeps}
   frontend:
     image: ghcr.io/\${GHCR_OWNER}/rmsb-frontend:\${TAG:-latest}
     container_name: rmsb-frontend
+    restart: unless-stopped
     environment:
       VITE_API_GATEWAY_URL: http://localhost:8080
     depends_on:
