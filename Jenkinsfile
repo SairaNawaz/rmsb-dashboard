@@ -58,7 +58,7 @@ pipeline {
                             git fetch origin
                             git reset --hard origin/main
                             docker compose pull
-                            docker compose up -d
+                            docker compose up -d --remove-orphans
                             echo Deployed at \$(date)
                         "
                     '''
