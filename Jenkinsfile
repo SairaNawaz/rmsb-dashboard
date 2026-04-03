@@ -59,8 +59,20 @@ pipeline {
                             cd $DEPLOY_PATH
                             git fetch origin
                             git reset --hard origin/main
-                            docker compose pull
-                            docker compose up -d --remove-orphans
+
+                            mkdir -p services
+
+                            # Fetch .env file for each active service from the registry DB
+                            curl -sf http://localhost:8080/api/registry | \
+                              jq -r '.[] | select(.status==\"active\") | .name' | \
+                            while read name; do
+                                curl -sf http://localhost:8080/api/registry/\$name/env \
+                                  > services/.env.\$name
+                            done
+
+                            SERVICE_FILES=\$(ls services/docker-compose.*.service.yml 2>/dev/null | xargs -I{} printf -- '-f %s ' {})
+                            docker compose -f docker-compose.yml \$SERVICE_FILES pull
+                            docker compose -f docker-compose.yml \$SERVICE_FILES up -d --remove-orphans
                             echo Deployed at \$(date)
                         "
                     '''

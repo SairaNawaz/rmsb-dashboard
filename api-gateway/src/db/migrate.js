@@ -24,9 +24,8 @@ async function migrate() {
   await pool.query(`ALTER TABLE services DROP COLUMN IF EXISTS ghcr_image`);
   await pool.query(`ALTER TABLE services DROP COLUMN IF EXISTS image_tag`);
 
-  // Per-service DB credentials (populated on activation)
-  await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS db_user     VARCHAR(100)`);
-  await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS db_password VARCHAR(255)`);
+  // Per-service env vars (entered at registration, written to .env file on activation)
+  await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS env_vars TEXT`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS platform_users (

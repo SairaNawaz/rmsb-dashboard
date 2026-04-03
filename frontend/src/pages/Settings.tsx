@@ -25,6 +25,7 @@ const EMPTY_FORM = {
   icon: '🔧',
   repo_url: '',
   branch: 'main',
+  env_vars: '',
 };
 
 export default function Settings() {
@@ -219,6 +220,20 @@ export default function Settings() {
                   value={form.branch}
                   onChange={handleChange}
                   placeholder="main"
+                />
+              </div>
+            </div>
+
+            <p className="form-section-title">Environment Variables</p>
+            <div className="form-grid">
+              <div className="field field-full">
+                <label>Env Vars <span className="field-hint">(one KEY=VALUE per line)</span></label>
+                <textarea
+                  name="env_vars"
+                  value={form.env_vars}
+                  onChange={handleChange}
+                  placeholder={"DB_HOST=postgres\nDB_PORT=5432\nREDIS_URL=redis://redis:6379"}
+                  rows={5}
                 />
               </div>
             </div>
