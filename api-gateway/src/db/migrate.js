@@ -27,6 +27,13 @@ async function migrate() {
   // Per-service env vars (entered at registration, written to .env file on activation)
   await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS env_vars TEXT`);
 
+  // Per-service DB credentials (auto-provisioned on activation)
+  await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS db_user     VARCHAR(100)`);
+  await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS db_password VARCHAR(255)`);
+
+  // Service base URL — defaults to co-hosted container, overridable for external hosting
+  await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS base_url VARCHAR(255)`);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS platform_users (
       id           SERIAL PRIMARY KEY,
