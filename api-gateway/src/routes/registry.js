@@ -7,7 +7,7 @@ const crypto = require('crypto');
 
 async function provisionServiceDB(service) {
   const { name, schema_name } = service;
-  const db_user    = `svc_${name}`;
+  const db_user    = `${name}_user`;
   const db_password = crypto.randomBytes(16).toString('hex');
 
   await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schema_name}"`);
@@ -175,7 +175,7 @@ router.delete('/:id', async (req, res) => {
     (async () => {
       try {
         await pool.query(`DROP SCHEMA IF EXISTS "${svc.schema_name}" CASCADE`);
-        await pool.query(`DROP USER IF EXISTS "svc_${svc.name}"`);
+        await pool.query(`DROP USER IF EXISTS "${svc.name}_user"`);
         console.log(`Cleaned up DB for ${svc.name}`);
       } catch (err) {
         console.error(`DB cleanup failed for ${svc.name}:`, err.message);
