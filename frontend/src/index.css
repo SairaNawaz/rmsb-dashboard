@@ -564,22 +564,6 @@ body {
   grid-column: 1 / -1;
 }
 
-.base-url-cell { white-space: nowrap; }
-
-.base-url-display, .base-url-edit {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.base-url-input {
-  font-size: 0.8rem;
-  padding: 0.2rem 0.4rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 200px;
-}
-
 .icon-selector {
   display: flex;
   flex-wrap: wrap;

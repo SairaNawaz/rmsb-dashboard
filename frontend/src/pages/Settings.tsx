@@ -39,8 +39,6 @@ export default function Settings() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [registered, setRegistered] = useState<Service | null>(null);
-  const [editingBaseUrl, setEditingBaseUrl] = useState<number | null>(null);
-  const [baseUrlDraft, setBaseUrlDraft] = useState('');
 
   function loadServices() {
     fetch(`${API}/registry`)
@@ -106,16 +104,6 @@ export default function Settings() {
   async function handleDelete(id: number) {
     if (!confirm('Remove this service from the registry?')) return;
     await fetch(`${API}/registry/${id}`, { method: 'DELETE' });
-    loadServices();
-  }
-
-  async function handleBaseUrlSave(id: number) {
-    await fetch(`${API}/registry/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base_url: baseUrlDraft }),
-    });
-    setEditingBaseUrl(null);
     loadServices();
   }
 
@@ -297,27 +285,7 @@ export default function Settings() {
                   </td>
                   <td><code>{svc.path_prefix}</code></td>
                   <td><code>{svc.schema_name}</code></td>
-                  <td className="base-url-cell">
-                    {editingBaseUrl === svc.id ? (
-                      <span className="base-url-edit">
-                        <input
-                          value={baseUrlDraft}
-                          onChange={(e) => setBaseUrlDraft(e.target.value)}
-                          className="base-url-input"
-                        />
-                        <button className="action-btn activate" onClick={() => handleBaseUrlSave(svc.id)}>Save</button>
-                        <button className="action-btn" onClick={() => setEditingBaseUrl(null)}>Cancel</button>
-                      </span>
-                    ) : (
-                      <span className="base-url-display">
-                        <code>{svc.base_url}</code>
-                        <button
-                          className="action-btn"
-                          onClick={() => { setEditingBaseUrl(svc.id); setBaseUrlDraft(svc.base_url); }}
-                        >Edit</button>
-                      </span>
-                    )}
-                  </td>
+                  <td><code>{svc.base_url}</code></td>
                   <td>
                     <span className={`status-badge ${svc.status}`}>{svc.status}</span>
                   </td>
