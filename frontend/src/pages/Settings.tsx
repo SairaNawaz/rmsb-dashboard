@@ -19,6 +19,8 @@ const API = (import.meta.env.VITE_API_GATEWAY_URL ||
     ? window.location.origin
     : `http://${window.location.hostname}:8080`)) + '/api';
 
+const ICONS = ['🔧','📦','🗂️','📊','📋','🔗','⚙️','🛠️','🚀','📡','🔒','🧩'];
+
 const EMPTY_FORM = {
   display_name: '',
   description: '',
@@ -184,12 +186,18 @@ export default function Settings() {
               </div>
               <div className="field">
                 <label>Icon</label>
-                <input
-                  name="icon"
-                  value={form.icon}
-                  onChange={handleChange}
-                  placeholder="📦"
-                />
+                <div className="icon-selector">
+                  {ICONS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className={`icon-option${form.icon === emoji ? ' selected' : ''}`}
+                      onClick={() => setForm((f) => ({ ...f, icon: emoji }))}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="field field-full">
                 <label>Description</label>
@@ -232,7 +240,7 @@ export default function Settings() {
                   name="env_vars"
                   value={form.env_vars}
                   onChange={handleChange}
-                  placeholder={"DB_HOST=postgres\nDB_PORT=5432\nREDIS_URL=redis://redis:6379"}
+                  placeholder={"DB_HOST=postgres\nDB_PORT=5432\nDB_NAME=rmsb"}
                   rows={5}
                 />
               </div>

@@ -564,6 +564,32 @@ body {
   grid-column: 1 / -1;
 }
 
+.icon-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.icon-option {
+  background: #f0f2f7;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.4rem;
+  padding: 0.3rem 0.5rem;
+  transition: border-color 0.15s;
+}
+
+.icon-option:hover {
+  border-color: #7c6fcd;
+}
+
+.icon-option.selected {
+  border-color: #7c6fcd;
+  background: #ede9ff;
+}
+
 .required {
   color: #c0392b;
 }
