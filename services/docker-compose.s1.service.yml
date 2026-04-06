@@ -1,0 +1,32 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.service.yml  —  PLATFORM MANAGED, DO NOT EDIT
+#
+# Values are substituted by CI from your environment variables before this
+# file is committed to the dashboard repo. You never need to edit this file.
+#
+# To add sidecars, uncomment the example below and adjust as needed.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  ${SERVICE_NAME}:
+    image: ghcr.io/${GHCR_OWNER}/rmsb-${SERVICE_NAME}-api:${TAG:-latest}
+    container_name: rmsb-${SERVICE_NAME}
+    env_file:
+      - services/.env.${SERVICE_NAME}
+    environment:
+      PORT: 3000
+      DB_SCHEMA: schema_${SERVICE_NAME}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── Optional sidecars ──────────────────────────────────────────────────────
+  # ${SERVICE_NAME}-worker:
+  #   image: ghcr.io/${GHCR_OWNER}/rmsb-${SERVICE_NAME}-worker:${TAG:-latest}
+  #   container_name: rmsb-${SERVICE_NAME}-worker
+  #   env_file:
+  #     - services/.env.${SERVICE_NAME}
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - ${SERVICE_NAME}
