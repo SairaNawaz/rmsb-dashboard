@@ -241,7 +241,7 @@ export default function Settings() {
                   name="env_vars"
                   value={form.env_vars}
                   onChange={handleChange}
-                  placeholder={"DB_HOST=postgres\nDB_PORT=5432\nDB_NAME=rmsb"}
+                  placeholder={"DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD are auto-provisioned.\nOnly add service-specific vars here, e.g.:\nAPI_KEY=abc123\nFEATURE_FLAG=true"}
                   rows={5}
                 />
               </div>
