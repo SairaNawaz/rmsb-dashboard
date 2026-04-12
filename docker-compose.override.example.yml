@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.override.example.yml
+#
+# Copy this to docker-compose.override.yml and fill in your Neon credentials.
+# The override is gitignored and auto-loaded by Docker Compose.
+#
+#   cp docker-compose.override.example.yml docker-compose.override.yml
+#   docker compose up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  api-gateway:
+    build: ./api-gateway
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_GATEWAY_URL: ${VITE_API_GATEWAY_URL:-http://localhost:8080}
+        VITE_APP_NAME: ${VITE_APP_NAME:-MultiService Process Dashboard}
+        VITE_ADMIN_EMAILS: ${VITE_ADMIN_EMAILS:-}
+
+  s1:
+    build:
+      context: ../s1-device-management
+      args:
+        VITE_BASE_PATH: /s1
+    environment:
+      PORT: 3000
+      DB_HOST: your-s1-neon-host.neon.tech
+      DB_PORT: 5432
+      DB_USER: neondb_owner
+      DB_PASSWORD: npg_xxxxx
+      DB_NAME: rmsb_db
+      DB_SSL: "true"
+      SKIP_SEED: "true"

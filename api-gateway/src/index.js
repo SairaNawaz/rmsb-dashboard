@@ -47,7 +47,6 @@ function getProxy(service) {
     proxyCache[key] = createProxyMiddleware({
       target: service.base_url,
       changeOrigin: true,
-      pathRewrite: { [`^${service.path_prefix}`]: '' },
       on: {
         error: (err, req, res) => {
           console.error(`Proxy error [${service.name}]:`, err.message);

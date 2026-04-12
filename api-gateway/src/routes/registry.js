@@ -1,43 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
-const crypto = require('crypto');
-
-// ─── Per-service DB provisioning ──────────────────────────────────────────────
-
-async function provisionServiceDB(service) {
-  const { name, schema_name } = service;
-  const db_user    = `${name}_user`;
-  const db_password = crypto.randomBytes(16).toString('hex');
-
-  await pool.query(`CREATE SCHEMA IF NOT EXISTS "${schema_name}"`);
-
-  try {
-    await pool.query(`CREATE USER "${db_user}" WITH PASSWORD '${db_password}'`);
-  } catch (err) {
-    if (err.code === '42710') {
-      await pool.query(`ALTER USER "${db_user}" WITH PASSWORD '${db_password}'`);
-    } else {
-      throw err;
-    }
-  }
-
-  const dbName = process.env.DB_NAME;
-  await pool.query(`GRANT CONNECT, CREATE ON DATABASE "${dbName}" TO "${db_user}"`);
-  await pool.query(`REVOKE ALL ON SCHEMA "${schema_name}" FROM PUBLIC`);
-  await pool.query(`GRANT USAGE, CREATE ON SCHEMA "${schema_name}" TO "${db_user}"`);
-  await pool.query(`GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA "${schema_name}" TO "${db_user}"`);
-  await pool.query(`GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA "${schema_name}" TO "${db_user}"`);
-  await pool.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA "${schema_name}" GRANT ALL ON TABLES    TO "${db_user}"`);
-  await pool.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA "${schema_name}" GRANT ALL ON SEQUENCES TO "${db_user}"`);
-
-  await pool.query(
-    `UPDATE services SET db_user = $1, db_password = $2 WHERE name = $3`,
-    [db_user, db_password, name]
-  );
-
-  return { db_user, db_password };
-}
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
@@ -145,16 +108,8 @@ router.patch('/:id', async (req, res) => {
     if (!rows.length) return res.status(404).json({ error: 'Service not found' });
     res.json(rows[0]);
 
-    // Fire-and-forget: provision DB on activation
     if (status === 'active') {
-      (async () => {
-        try {
-          await provisionServiceDB(rows[0]);
-          console.log(`DB provisioned for ${rows[0].name}`);
-        } catch (err) {
-          console.error(`DB provisioning failed for ${rows[0].name}:`, err.message);
-        }
-      })();
+      console.log(`Service ${rows[0].name} activated — DB is managed externally (separate Neon project)`);
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -169,18 +124,8 @@ router.delete('/:id', async (req, res) => {
     const svc = rows[0];
 
     await pool.query('DELETE FROM services WHERE id = $1', [req.params.id]);
+    console.log(`Service ${svc.name} removed — DB cleanup is managed externally`);
     res.status(204).end();
-
-    // Fire-and-forget: drop schema and DB user
-    (async () => {
-      try {
-        await pool.query(`DROP SCHEMA IF EXISTS "${svc.schema_name}" CASCADE`);
-        await pool.query(`DROP USER IF EXISTS "${svc.name}_user"`);
-        console.log(`Cleaned up DB for ${svc.name}`);
-      } catch (err) {
-        console.error(`DB cleanup failed for ${svc.name}:`, err.message);
-      }
-    })();
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
