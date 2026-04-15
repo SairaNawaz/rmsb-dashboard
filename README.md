@@ -11,7 +11,8 @@ rmsb-dashboard/
 ├── frontend/               ← React + TypeScript + Vite (dashboard, settings, users)
 ├── api-gateway/            ← Express API gateway (registry, users, service routing)
 ├── docker-compose.yml      ← Production compose (image-based, Neon DB)
-├── docker-compose.override.yml  ← Local dev override (gitignored, builds from source)
+├── docker-compose.local.yml     ← Local dev (gitignored, builds from source)
+├── docker-compose.local.example.yml  ← Committed reference — copy to .local.yml
 ├── .env.example            ← Copy to .env and fill in Neon credentials
 ├── services/               ← Per-service compose fragments + env files (managed by CI)
 ├── Jenkinsfile             ← Jenkins CI/CD pipeline
@@ -78,18 +79,19 @@ cd rmsb-dashboard
 
 # Configure environment
 cp .env.example .env                    # fill in dashboard Neon creds
+cp ../s1-device-management/.env.example ../s1-device-management/.env  # fill in s1 Neon creds
 
-# Create the override file (or copy from a teammate)
-# See docker-compose.override.example.yml for reference
+# Create your local compose file from the example
+cp docker-compose.local.example.yml docker-compose.local.yml
 ```
 
 ### Run
 
 ```bash
-docker compose up --build
+docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
 ```
 
-Docker automatically merges `docker-compose.yml` + `docker-compose.override.yml`. This builds everything from source, connects to Neon, and puts all services on one network.
+Docker merges `docker-compose.yml` + `docker-compose.local.yml`. This builds everything from source, connects to Neon, and puts all services on one network.
 
 Open `http://localhost:8080`, go to Settings, register s1, and click Activate.
 
@@ -98,9 +100,10 @@ Open `http://localhost:8080`, go to Settings, register s1, and click Activate.
 | File | Purpose | Committed |
 |------|---------|-----------|
 | `docker-compose.yml` | Production base — gateway + frontend as images | Yes |
-| `docker-compose.override.yml` | Local dev — swaps images to builds, adds s1 | No (gitignored) |
+| `docker-compose.local.yml` | Local dev — builds from source, adds s1 + grafana | No (gitignored) |
+| `docker-compose.local.example.yml` | Reference template for the above | Yes |
 
-On the server, the override file doesn't exist, so Docker uses images. Locally, it auto-loads and builds from source.
+On the server, `docker-compose.local.yml` doesn't exist, so Docker uses images only. Locally, you pass it explicitly with `-f`.
 
 ---
 

@@ -3,5 +3,5 @@ frontend/node_modules/
 api-gateway/node_modules/
 frontend/dist/
 .env
-docker-compose.override.yml
+docker-compose.local.yml
 services/.env.*
